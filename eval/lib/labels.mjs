@@ -19,8 +19,20 @@ export const LABEL_NOTES = {
     "Query = an OpenAlex topic display name. Gain 3 = the paper's own primary topic, 2 = a secondary topic scoring >=0.5, 1 = same subfield, 0 = otherwise. Topic fields are stripped from every record handed to a ranker, so the labels are unreachable from the input.",
 };
 
+// The quarter is taken from the paper's own publication date, not from the
+// bucket it was fetched in. The oversampled review pass stamps every record it
+// adds as 2021Q1 regardless of when it was published, so trusting that field
+// put Q2 and Q3 reviews in the wrong citation cohort and gave them percentiles
+// computed against the wrong comparison group.
+function quarterOf(date) {
+  const text = String(date || "");
+  if (!/^\d{4}-\d{2}/.test(text)) return "unknown";
+  const month = Number(text.slice(5, 7));
+  return `${text.slice(0, 4)}Q${Math.floor((month - 1) / 3) + 1}`;
+}
+
 function cohortKey(work) {
-  return `${work.benchField}|${work.benchWindow}`;
+  return `${work.benchField}|${quarterOf(work.publicationDate)}`;
 }
 
 export function buildLabels(candidates) {

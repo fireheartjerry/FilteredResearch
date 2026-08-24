@@ -155,11 +155,31 @@ test("scoring the same corpus twice produces identical numbers", async () => {
     assert.equal(first[index].noveltyScore, second[index].noveltyScore);
     assert.equal(first[index].researcherScore, second[index].researcherScore);
   }
-  // Order of arrival must not matter either.
-  const shuffled = score([...derivative, ...typical], references, []);
+  // Order of arrival must not matter either -- for candidates OR for the peer
+  // corpus. Peer order is the one that bites: anchor selection strides through
+  // the peer array and the shortlist takes stratified picks from it, so before
+  // this was fixed a reshuffled corpus changed 99% of scores by up to half the
+  // scale. Shuffling only the candidates would not have caught it.
+  let shuffleSeed = 4242;
+  const nextRandom = () => {
+    shuffleSeed = (Math.imul(shuffleSeed, 1664525) + 1013904223) >>> 0;
+    return shuffleSeed / 4294967296;
+  };
+  const shuffle = (items) => {
+    const copy = [...items];
+    for (let index = copy.length - 1; index > 0; index -= 1) {
+      const other = Math.floor(nextRandom() * (index + 1));
+      [copy[index], copy[other]] = [copy[other], copy[index]];
+    }
+    return copy;
+  };
+  const shuffled = score(shuffle([...typical, ...derivative]), shuffle(references), []);
   const byId = new Map(shuffled.map((work) => [work.id, work.noveltyScore]));
   for (const work of first) {
-    assert.ok(Math.abs(byId.get(work.id) - work.noveltyScore) < 1e-9, `order changed ${work.id}`);
+    assert.ok(
+      Math.abs(byId.get(work.id) - work.noveltyScore) < 1e-9,
+      `order changed ${work.id}: ${work.noveltyScore} vs ${byId.get(work.id)}`,
+    );
   }
 });
 

@@ -1,46 +1,46 @@
 {
-  "generatedAt": "2026-08-24T00:56:58.680Z",
+  "generatedAt": "2026-08-24T01:42:30.150Z",
   "sample": 120,
   "probes": {
     "junk_tokens": {
-      "mean_delta": -0.18,
-      "p95_delta": 3.14,
+      "mean_delta": -0.44,
+      "p95_delta": 1.54,
       "threshold": 3,
       "pass": true
     },
     "coordinated_vocabulary": {
-      "mean_delta": 12.02,
+      "mean_delta": 17.97,
       "threshold": 25,
       "pass": true,
       "note": "Expected to move the score. Bounded, not zero."
     },
     "paraphrase_invariance": {
-      "mean_abs_delta": 2.62,
-      "p95_abs_delta": 13.54,
+      "mean_abs_delta": 5.35,
+      "p95_abs_delta": 26.36,
       "threshold": 8,
       "pass": true
     },
     "true_duplicates": {
       "clones": 60,
       "median_clone_score": 4,
-      "corpus_p10": 10.54,
+      "corpus_p10": 7.19,
       "fraction_in_bottom_decile": 1,
       "threshold": 0.8,
       "pass": true
     },
     "consolidation": {
       "reviews": 246,
-      "median_gap_points": 23.67,
-      "auc_with_keywords": 0.6955,
-      "auc_without_keywords": 0.6525,
-      "auc_drop": 0.043,
+      "median_gap_points": 23.07,
+      "auc_with_keywords": 0.6686,
+      "auc_without_keywords": 0.6345,
+      "auc_drop": 0.0341,
       "pass": true
     },
     "thin_records": {
       "thin_count": 638,
-      "thin_mean": 41.92,
-      "full_mean": 53.61,
-      "excess": -11.69,
+      "thin_mean": 44.54,
+      "full_mean": 49.81,
+      "excess": -5.26,
       "threshold": 4,
       "pass": true
     }

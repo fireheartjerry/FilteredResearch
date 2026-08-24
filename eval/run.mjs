@@ -49,8 +49,23 @@ async function evaluateRanker(adapter, corpus, labels, queries) {
       classes.positives.map((work) => byId.get(work.id)?.noveltyScore || 0),
       classes.negatives.map((work) => byId.get(work.id)?.noveltyScore || 0),
     )),
+    // The headline AUC pools two very different negatives. Reviews are a class the
+    // consolidation machinery was explicitly built to catch, so leaving them in
+    // makes the number look better than the question its name asks. Both halves
+    // are reported; the derivative-only figure is the honest answer to
+    // "disruptive versus derivative research".
+    auc_vs_reviews_only: round(auc(
+      classes.positives.map((work) => byId.get(work.id)?.noveltyScore || 0),
+      classes.negatives.filter((work) => work.workType === "review").map((work) => byId.get(work.id)?.noveltyScore || 0),
+    )),
+    auc_vs_derivative_articles: round(auc(
+      classes.positives.map((work) => byId.get(work.id)?.noveltyScore || 0),
+      classes.negatives.filter((work) => work.workType !== "review").map((work) => byId.get(work.id)?.noveltyScore || 0),
+    )),
     positives: classes.positives.length,
     negatives: classes.negatives.length,
+    negatives_reviews: classes.negatives.filter((work) => work.workType === "review").length,
+    negatives_articles: classes.negatives.filter((work) => work.workType !== "review").length,
     review_gap_points: round(
       mean(inSplit.filter((work) => work.workType !== "review").map((work) => byId.get(work.id).noveltyScore || 0)) -
       mean(inSplit.filter((work) => work.workType === "review").map((work) => byId.get(work.id).noveltyScore || 0)),
@@ -101,6 +116,22 @@ async function evaluateRanker(adapter, corpus, labels, queries) {
   combined.beats_both_parts =
     combined.ndcg_at_50 > combined.novelty_alone_ndcg_at_50 &&
     combined.ndcg_at_50 > combined.authorship_alone_ndcg_at_50;
+
+  // Complementarity measured in both directions. A single label cannot show it:
+  // authorship dominates the citation label by construction, so the question is
+  // whether the blend carries something each part alone does not, judged on the
+  // label that part is worst at.
+  const orderCombinedByNovelty = [...noveltyEvaluable].sort(
+    (left, right) => (byId.get(right.id).discoveryScore || 0) - (byId.get(left.id).discoveryScore || 0),
+  );
+  const orderAuthorshipByNovelty = [...noveltyEvaluable].sort(
+    (left, right) => (byId.get(right.id).researcherScore || 0) - (byId.get(left.id).researcherScore || 0),
+  );
+  combined.combined_ndcg_on_novelty_label = round(ndcgAt(orderCombinedByNovelty, noveltyGain, 50));
+  combined.authorship_alone_ndcg_on_novelty_label = round(ndcgAt(orderAuthorshipByNovelty, noveltyGain, 50));
+  combined.beats_novelty_alone_on_citations = combined.ndcg_at_50 > combined.novelty_alone_ndcg_at_50;
+  combined.beats_authorship_alone_on_novelty =
+    combined.combined_ndcg_on_novelty_label > combined.authorship_alone_ndcg_on_novelty_label;
 
   // --- relevance ---
   const relevanceCorpus = corpus.relevanceCandidates.filter((work) => {
@@ -185,7 +216,9 @@ async function main() {
   const llmPath = join(FIXTURES, "llm-novelty.json");
   let llm = null;
   if (existsSync(llmPath)) {
-    const judgements = JSON.parse(readFileSync(llmPath, "utf8"));
+    const payload = JSON.parse(readFileSync(llmPath, "utf8"));
+    const judgements = payload.scores || payload;
+    const provenance = payload.provenance || null;
     const judged = corpus.rawCandidates.filter(
       (work) => work.split === SPLIT && judgements[work.id] !== undefined && labels.get(work.id)?.noveltyLabel !== null,
     );
@@ -204,7 +237,16 @@ async function main() {
         positives: classes.positives.length,
         negatives: classes.negatives.length,
         note: "A general-purpose LLM prompted directly with title and abstract, scored on the same held-out papers. Run once offline; never called at runtime.",
+        // A baseline that anti-correlates with the label is a broken instrument,
+        // not a bar that was cleared. Saying so here stops "beats the LLM" from
+        // ever being read as evidence of quality.
+        provenance,
+        usableAsBaseline: null,
       };
+      llm.usableAsBaseline = llm.spearman > 0.02;
+      llm.caveat = llm.usableAsBaseline
+        ? "Comparable."
+        : "This baseline anti-correlates with the label, so it measures nothing. Beating it is not evidence of quality; it is evidence that prompting a model for novelty from an abstract does not work. Do not use it as a criterion anchor.";
       // The algorithm is scored on exactly the papers the LLM saw, so the two
       // numbers are comparable rather than measured over different sets.
       const scoredNow = new Map((await currentAdapter()).scoreBatch(corpus.candidates, corpus.peers, corpus.authors).map((w) => [w.id, w]));
@@ -262,7 +304,9 @@ async function main() {
   console.log(`  corpus: ${report.corpus.inSplit} candidates in split, ${report.corpus.peers} peers, ${report.corpus.relevanceQueries} relevance queries\n`);
   console.log("NOVELTY");
   console.log(line("nDCG@50", report.novelty.ndcg_at_50, report.baseline.novelty.ndcg_at_50));
-  console.log(line("AUC disruptive vs derivative", report.novelty.auc_disruptive_vs_derivative, report.baseline.novelty.auc_disruptive_vs_derivative));
+  console.log(line("AUC (all negatives)", report.novelty.auc_disruptive_vs_derivative, report.baseline.novelty.auc_disruptive_vs_derivative));
+  console.log(line("AUC vs derivative articles", report.novelty.auc_vs_derivative_articles, report.baseline.novelty.auc_vs_derivative_articles));
+  console.log(line("AUC vs reviews only", report.novelty.auc_vs_reviews_only, report.baseline.novelty.auc_vs_reviews_only));
   console.log(line("Spearman vs label", report.novelty.spearman, report.baseline.novelty.spearman));
   console.log(line("review gap (points)", report.novelty.review_gap_points, report.baseline.novelty.review_gap_points));
   console.log("\nRELEVANCE");

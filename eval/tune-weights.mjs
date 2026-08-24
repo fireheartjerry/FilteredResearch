@@ -20,6 +20,10 @@ import { scoreBatch, NOVELTY_WEIGHTS } from "../src/shared/scoring.js";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SPLIT = "tune";
 
+// How much of the raw coordinate-ascent result survives the shrink. 0 would ship
+// a flat prior, 1 would ship the unregularised argmax.
+const SHRINK_TO_FIT = 0.6;
+
 const SIGNALS = [
   ["crowding", true],
   ["centrality", true],
@@ -142,8 +146,19 @@ function main() {
     }
     if (!improved) break;
   }
-  const sum = weights.reduce((total, value) => total + value, 0) || 1;
-  const normalised = weights.map((value) => Number((value / sum).toFixed(3)));
+  // Shrink toward a uniform prior over the signals that correlate positively on
+  // their own. Coordinate ascent on a few hundred labelled papers puts large
+  // weights on whichever of several correlated statistics it reaches first and
+  // zeroes the rest, and that pattern moves between runs -- it is fitting noise.
+  // This step is code, not prose in a comment, so the shipped constants can be
+  // regenerated exactly.
+  const positive = new Set(diagnostics.filter((entry) => entry.spearman > 0).map((entry) => entry.signal));
+  const uniformShare = positive.size ? 1 / positive.size : 0;
+  const fittedSum = weights.reduce((total, value) => total + value, 0) || 1;
+  const blended = weights.map((value, index) =>
+    SHRINK_TO_FIT * (value / fittedSum) + (1 - SHRINK_TO_FIT) * (positive.has(keys[index]) ? uniformShare : 0));
+  const sum = blended.reduce((total, value) => total + value, 0) || 1;
+  const normalised = blended.map((value) => Number((value / sum).toFixed(3)));
   console.log(`  tuned   objective ${round(best.objective)}  (nDCG@50 ${round(best.ndcg)}, AUC ${round(best.auc)})`);
   console.log(`\n  fitted weights:`);
   for (let index = 0; index < keys.length; index += 1) {
@@ -151,6 +166,16 @@ function main() {
   }
   const dropped = keys.filter((_, index) => normalised[index] === 0);
   if (dropped.length) console.log(`    (dropped: ${dropped.join(", ")})`);
+  console.log(`
+  paste into src/shared/scoring.js:
+`);
+  const byKey = new Map(NOVELTY_WEIGHTS.map((entry) => [entry.key, entry]));
+  const ordered = keys.map((key, index) => ({ key, weight: normalised[index], entry: byKey.get(key) }))
+    .filter((row) => row.weight > 0)
+    .sort((left, right) => right.weight - left.weight);
+  for (const row of ordered) {
+    console.log(`  { key: "${row.key}", weight: ${row.weight.toFixed(3)}, invert: ${row.entry.invert}, label: "${row.entry.label}" },`);
+  }
 
   // Discovery blend: how much novelty versus authorship best predicts which
   // papers were actually worth surfacing.

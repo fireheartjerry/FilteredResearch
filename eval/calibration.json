@@ -1,112 +1,112 @@
 {
-  "generatedAt": "2026-08-24T00:55:44.284Z",
+  "generatedAt": "2026-08-24T01:43:48.978Z",
   "cells": 12,
   "fields": 4,
   "windows": 3,
   "decile_occupancy": [
-    0.069,
-    0.095,
-    0.099,
-    0.105,
+    0.12,
     0.109,
-    0.114,
-    0.11,
-    0.111,
-    0.101,
-    0.086
+    0.097,
+    0.106,
+    0.109,
+    0.102,
+    0.099,
+    0.097,
+    0.09,
+    0.07
   ],
   "occupancy_ok": true,
-  "mean_drift_points": 2.94,
-  "sigma_ratio": 1.076,
+  "mean_drift_points": 3.77,
+  "sigma_ratio": 1.034,
   "drift_ok": true,
-  "corpus_doubling_mean_shift": 5.85,
+  "corpus_doubling_mean_shift": 7.88,
   "size_ok": false,
-  "resample_rank_spearman": 0.9889,
+  "resample_rank_spearman": 0.9773,
   "stability_ok": true,
   "per_cell": [
     {
       "field": "17",
       "window": "2021Q1",
       "n": 239,
-      "mean": 50.4,
-      "sd": 27.67
+      "mean": 47.89,
+      "sd": 28.22
     },
     {
       "field": "17",
       "window": "2021Q2",
       "n": 170,
-      "mean": 51.38,
-      "sd": 27.6
+      "mean": 47.19,
+      "sd": 28.14
     },
     {
       "field": "17",
       "window": "2021Q3",
       "n": 170,
-      "mean": 52.51,
-      "sd": 27.36
+      "mean": 46.75,
+      "sd": 28.55
     },
     {
       "field": "27",
       "window": "2021Q1",
       "n": 223,
-      "mean": 49.95,
-      "sd": 27.5
+      "mean": 45.66,
+      "sd": 28.21
     },
     {
       "field": "27",
       "window": "2021Q2",
       "n": 170,
-      "mean": 51.23,
-      "sd": 26.25
+      "mean": 45.7,
+      "sd": 27.8
     },
     {
       "field": "27",
       "window": "2021Q3",
       "n": 170,
-      "mean": 52.89,
-      "sd": 25.71
+      "mean": 44.12,
+      "sd": 27.93
     },
     {
       "field": "31",
       "window": "2021Q1",
       "n": 205,
-      "mean": 51.31,
-      "sd": 27.48
+      "mean": 47.39,
+      "sd": 28.19
     },
     {
       "field": "31",
       "window": "2021Q2",
       "n": 170,
-      "mean": 51.52,
-      "sd": 27.47
+      "mean": 47.41,
+      "sd": 27.98
     },
     {
       "field": "31",
       "window": "2021Q3",
       "n": 170,
-      "mean": 52.01,
-      "sd": 27.07
+      "mean": 47.61,
+      "sd": 28.18
     },
     {
       "field": "25",
       "window": "2021Q1",
       "n": 240,
-      "mean": 50.44,
-      "sd": 27.42
+      "mean": 47.21,
+      "sd": 28.2
     },
     {
       "field": "25",
       "window": "2021Q2",
       "n": 170,
-      "mean": 52.03,
-      "sd": 27.34
+      "mean": 47.5,
+      "sd": 28.49
     },
     {
       "field": "25",
       "window": "2021Q3",
       "n": 170,
-      "mean": 51.71,
-      "sd": 27.15
+      "mean": 46.9,
+      "sd": 28.75
     }
   ],
   "passed": 3

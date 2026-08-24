@@ -139,11 +139,19 @@ function buildCoCitationIndex(peers, { maxPairsPerPeer = 220 } = {}) {
 // typical pairing is, and whether there is a tail of pairings nobody has made.
 // Work that is only atypical is usually noise; work that is conventional with an
 // atypical tail is the shape that new ideas actually have.
-function referenceCombination(work, index) {
+// `selfIndexed` means this paper's own bibliography is one of the ones the index
+// was built from -- true whenever a peer is being measured to seed the reference
+// distributions. Its own contribution is then subtracted, because otherwise every
+// such paper is compared against a field that has already read it: its reference
+// pairs all have support, none of its pairings are unseen, and it couples
+// perfectly with itself. Left uncorrected, the peers seeding the distributions
+// sat at the conventional extreme (strongestCoupling exactly 1.0 for 100% of
+// them) and compressed the candidate range they were supposed to calibrate.
+function referenceCombination(work, index, { selfIndexed = false } = {}) {
   const references = [...new Set(Array.isArray(work.referencedWorks) ? work.referencedWorks : [])];
-  if (references.length < 3 || !index.bibliographies) return null;
-
-  const total = index.bibliographies;
+  const total = index.bibliographies - (selfIndexed ? 1 : 0);
+  if (references.length < 3 || total < 1) return null;
+  const own = selfIndexed ? 1 : 0;
   const pointwise = [];
   let unseenPairs = 0;
   let pairs = 0;
@@ -153,9 +161,9 @@ function referenceCombination(work, index) {
       pairs += 1;
       const a = references[left];
       const b = references[right];
-      const together = index.pairCount.get(pairKey(a, b)) || 0;
-      const countA = index.citedCount.get(a) || 0;
-      const countB = index.citedCount.get(b) || 0;
+      const together = Math.max(0, (index.pairCount.get(pairKey(a, b)) || 0) - own);
+      const countA = Math.max(0, (index.citedCount.get(a) || 0) - own);
+      const countB = Math.max(0, (index.citedCount.get(b) || 0) - own);
       if (together === 0) unseenPairs += 1;
       // Expected co-citations if the two were cited independently. A pair that
       // occurs far less often than chance predicts is an unusual join; a pair
@@ -168,12 +176,12 @@ function referenceCombination(work, index) {
   if (!pairs) return null;
 
   const sorted = sortedCopy(pointwise);
-  const known = references.filter((id) => (index.citedCount.get(id) || 0) > 0).length;
+  const known = references.filter((id) => (index.citedCount.get(id) || 0) - own > 0).length;
   // How heavily this bibliography leans on the works the field cites most. A
   // paper built entirely from the canon is extending it; one that mostly cites
   // work the field rarely touches is doing something else.
   let canonHits = 0;
-  for (const id of references) if ((index.citedCount.get(id) || 0) >= index.canonThreshold) canonHits += 1;
+  for (const id of references) if ((index.citedCount.get(id) || 0) - own >= index.canonThreshold) canonHits += 1;
 
   return {
     pairs,
@@ -224,12 +232,16 @@ export function buildNoveltyModel(candidates, peers, options = {}) {
 
   // The semantic space needs token order, so it reads a bounded sample of the
   // corpus rather than all of it.
+  // Sampling strides through the corpus, so the corpus needs a canonical order:
+  // striding through arrival order makes the space -- and therefore every score
+  // built on it -- depend on the sequence records happened to be fetched in.
+  const orderedWorks = [...allWorks].sort((left, right) => String(left.id).localeCompare(String(right.id)));
   const space = buildSemanticSpace(
     (function* streamTokens() {
-      for (const work of allWorks) yield tokensForSpace(textOf(work));
+      for (const work of orderedWorks) yield tokensForSpace(textOf(work));
     })(),
     lexicon,
-    { documentCount: allWorks.length },
+    { documentCount: orderedWorks.length },
   );
 
   // Pass two builds the vectors and the terminology measure, again one document
@@ -238,7 +250,10 @@ export function buildNoveltyModel(candidates, peers, options = {}) {
   const semanticByWork = new Map();
   const emergentByWork = new Map();
   const semanticVectors = [];
-  for (const work of allWorks) {
+  // Canonical order here too: the common-component subtraction sums every vector,
+  // and floating-point addition is not associative, so arrival order would leave
+  // a small but real dependence behind even after the sampling fix.
+  for (const work of orderedWorks) {
     const terms = contentTerms(textOf(work));
     lexicalByWork.set(work, bm25Weights(terms, lexicon, averageLength));
     const vector = documentVector(terms, space, lexicon, averageLength);
@@ -260,7 +275,6 @@ export function buildNoveltyModel(candidates, peers, options = {}) {
     emergentByWork,
     historicalDocumentFrequency,
     currentDocumentFrequency,
-    coCitation,
     peers,
     candidates,
   };
@@ -285,7 +299,13 @@ function emergenceOf(terms, lexicon, historical, current) {
     const idf = lexicon.idf.get(term);
     if (!idf) continue;
     const seen = current.get(term) || 0;
-    const corroboration = seen >= 3 ? 1 : seen === 2 ? 0.6 : 0.3;
+    // Two independent users, always. On a large corpus the lexicon's own
+    // frequency floor already enforces this, but a fresh install indexes only a
+    // few dozen papers and drops that floor to 1 -- which is exactly when a
+    // single document's typos and OCR debris would otherwise read as the field
+    // inventing vocabulary.
+    if (seen < 2) continue;
+    const corroboration = seen >= 3 ? 1 : 0.6;
     count += 1;
     weight += corroboration * Math.min(idf, EMERGENT_TERM_CAP);
     if (examples.length < 6) examples.push(term);
@@ -352,7 +372,8 @@ function shortlist(candidateLexical, cohortPeers, peerLexical, postings, limit) 
   }
   const scored = [];
   for (let index = 0; index < cohortPeers.length; index += 1) scored.push([dots[index], index]);
-  scored.sort((left, right) => right[0] - left[0]);
+  // Ties break on position so an equal-scoring pair cannot swap between runs.
+  scored.sort((left, right) => right[0] - left[0] || left[1] - right[1]);
   const nearest = scored.slice(0, Math.min(limit, scored.length)).map((entry) => entry[1]);
   // A stratified stride over the rest keeps an unbiased picture of how dense the
   // field is overall; a pure nearest-neighbour set would make every field look
@@ -465,7 +486,12 @@ export function measureCandidate(work, model, cohort, cache) {
   }
 
   // --- reference combination --------------------------------------------------
-  measure.combination = referenceCombination(work, model.coCitation);
+  // Scoped to the paper's own cohort, not to the whole index. "How often does
+  // this field cite these two works together" is a question about a field; asking
+  // it of a corpus spanning medicine, physics, materials science and computer
+  // science answers a different and much less useful question, and made a paper's
+  // score move when unrelated fields were added to the index.
+  measure.combination = referenceCombination(work, cache.coCitation, { selfIndexed: cache.peerIds.has(work.id) });
 
   // --- bibliographic coupling -------------------------------------------------
   // Sharing a bibliography with existing work is the clearest sign of building
@@ -481,6 +507,9 @@ export function measureCandidate(work, model, cohort, cache) {
       if (!peersCiting) continue;
       for (const peerIndex of peersCiting) shared.set(peerIndex, (shared.get(peerIndex) || 0) + 1);
     }
+    // A paper is not coupled to itself, however perfectly its bibliography matches.
+    const selfPosition = cache.positionById.get(work.id);
+    if (selfPosition !== undefined) shared.delete(selfPosition);
     let strongest = 0;
     let total = 0;
     for (const [peerIndex, overlap] of shared) {
@@ -515,9 +544,15 @@ export function measureCandidate(work, model, cohort, cache) {
 }
 
 export function buildCohortCache(cohortPeers, model, referenceDate) {
-  const olderPeers = referenceDate
+  // Sorted by id, not left in arrival order. Anchor selection strides through
+  // this array and shortlist's stratified picks step through it, so its order is
+  // load-bearing: without a canonical one, the same corpus delivered in a
+  // different sequence produced a different score for 99% of papers, by as much
+  // as half the scale.
+  const olderPeers = (referenceDate
     ? cohortPeers.filter((peer) => !peer.publicationDate || peer.publicationDate < referenceDate)
-    : cohortPeers;
+    : [...cohortPeers]
+  ).sort((left, right) => String(left.id).localeCompare(String(right.id)));
   const peerLexical = olderPeers.map((peer) => model.lexicalByWork.get(peer));
   const peerSemantic = olderPeers.map((peer) => model.semanticByWork.get(peer));
   const postings = buildPostings(peerLexical);
@@ -525,8 +560,12 @@ export function buildCohortCache(cohortPeers, model, referenceDate) {
   // reference id -> which peers cite it, so bibliographic coupling costs one
   // pass over a candidate's own reference list rather than a scan of every peer.
   const referenceIndex = new Map();
+  const peerIds = new Set();
+  const positionById = new Map();
   const peerReferenceCount = new Int32Array(olderPeers.length);
   for (let index = 0; index < olderPeers.length; index += 1) {
+    peerIds.add(olderPeers[index].id);
+    positionById.set(olderPeers[index].id, index);
     const references = olderPeers[index]?.referencedWorks;
     if (!Array.isArray(references)) continue;
     peerReferenceCount[index] = references.length;
@@ -556,7 +595,10 @@ export function buildCohortCache(cohortPeers, model, referenceDate) {
     peerSemantic,
     postings,
     referenceIndex,
+    peerIds,
+    positionById,
     peerReferenceCount,
+    coCitation: buildCoCitationIndex(olderPeers),
     centroid: { vector: centroidVector, norm: counted ? 1 : 0 },
   };
 }

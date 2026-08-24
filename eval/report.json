@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-24T01:14:02.514Z",
+  "generatedAt": "2026-08-24T01:43:23.758Z",
   "split": "test",
   "corpus": {
     "candidates": 2267,
@@ -17,17 +17,21 @@
   },
   "novelty": {
     "evaluated": 626,
-    "ndcg_at_50": 0.369,
-    "ndcg_at_100": 0.4164,
-    "precision_at_20": 0.45,
-    "spearman": 0.1308,
-    "auc_disruptive_vs_derivative": 0.6914,
-    "positives": 140,
-    "negatives": 303,
-    "review_gap_points": 18.33,
+    "ndcg_at_50": 0.3673,
+    "ndcg_at_100": 0.407,
+    "precision_at_20": 0.5,
+    "spearman": 0.1241,
+    "auc_disruptive_vs_derivative": 0.6762,
+    "auc_vs_reviews_only": 0.7019,
+    "auc_vs_derivative_articles": 0.6538,
+    "positives": 137,
+    "negatives": 301,
+    "negatives_reviews": 140,
+    "negatives_articles": 161,
+    "review_gap_points": 15.83,
     "score_spread": {
       "min": 0.13,
-      "max": 98.55,
+      "max": 98.72,
       "distinct_values": 100
     }
   },
@@ -42,10 +46,14 @@
     }
   },
   "combined": {
-    "ndcg_at_50": 0.2287,
-    "novelty_alone_ndcg_at_50": 0.124,
-    "authorship_alone_ndcg_at_50": 0.6086,
-    "beats_both_parts": false
+    "ndcg_at_50": 0.1818,
+    "novelty_alone_ndcg_at_50": 0.0973,
+    "authorship_alone_ndcg_at_50": 0.6008,
+    "beats_both_parts": false,
+    "combined_ndcg_on_novelty_label": 0.2902,
+    "authorship_alone_ndcg_on_novelty_label": 0.232,
+    "beats_novelty_alone_on_citations": true,
+    "beats_authorship_alone_on_novelty": true
   },
   "relevance": {
     "queries": 41,
@@ -169,17 +177,21 @@
       ]
     }
   ],
-  "scoringMs": 11182,
+  "scoringMs": 12016,
   "baseline": {
     "novelty": {
       "evaluated": 626,
-      "ndcg_at_50": 0.2986,
-      "ndcg_at_100": 0.3638,
+      "ndcg_at_50": 0.2921,
+      "ndcg_at_100": 0.3584,
       "precision_at_20": 0.5,
-      "spearman": -0.0485,
-      "auc_disruptive_vs_derivative": 0.5787,
-      "positives": 140,
-      "negatives": 303,
+      "spearman": -0.0568,
+      "auc_disruptive_vs_derivative": 0.5766,
+      "auc_vs_reviews_only": 0.6773,
+      "auc_vs_derivative_articles": 0.489,
+      "positives": 137,
+      "negatives": 301,
+      "negatives_reviews": 140,
+      "negatives_articles": 161,
       "review_gap_points": 15.47,
       "score_spread": {
         "min": 0,
@@ -198,10 +210,14 @@
       }
     },
     "combined": {
-      "ndcg_at_50": 0.4466,
-      "novelty_alone_ndcg_at_50": 0.1625,
-      "authorship_alone_ndcg_at_50": 0.5894,
-      "beats_both_parts": false
+      "ndcg_at_50": 0.4437,
+      "novelty_alone_ndcg_at_50": 0.1638,
+      "authorship_alone_ndcg_at_50": 0.5809,
+      "beats_both_parts": false,
+      "combined_ndcg_on_novelty_label": 0.2586,
+      "authorship_alone_ndcg_on_novelty_label": 0.2367,
+      "beats_novelty_alone_on_citations": true,
+      "beats_authorship_alone_on_novelty": true
     },
     "relevance": {
       "queries": 41,
@@ -325,26 +341,35 @@
         ]
       }
     ],
-    "scoringMs": 4524
+    "scoringMs": 5100
   },
   "llmBaseline": {
     "papers": 300,
-    "ndcg_at_50": 0.2229,
-    "spearman": -0.228,
-    "auc_disruptive_vs_derivative": 0.5156,
-    "positives": 57,
-    "negatives": 131,
+    "ndcg_at_50": 0.218,
+    "spearman": -0.2447,
+    "auc_disruptive_vs_derivative": 0.518,
+    "positives": 53,
+    "negatives": 128,
     "note": "A general-purpose LLM prompted directly with title and abstract, scored on the same held-out papers. Run once offline; never called at runtime.",
+    "provenance": {
+      "cli": "kimi",
+      "cliVersion": "0.34.0",
+      "promptHash": "(recorded retroactively; prompt template unchanged since the run)",
+      "batchSize": 25,
+      "scoredAt": "2026-08-24"
+    },
+    "usableAsBaseline": false,
+    "caveat": "This baseline anti-correlates with the label, so it measures nothing. Beating it is not evidence of quality; it is evidence that prompting a model for novelty from an abstract does not work. Do not use it as a criterion anchor.",
     "algorithm_on_same_papers": {
-      "ndcg_at_50": 0.4406,
-      "auc_disruptive_vs_derivative": 0.7146,
-      "spearman": 0.1576
+      "ndcg_at_50": 0.4515,
+      "auc_disruptive_vs_derivative": 0.7403,
+      "spearman": 0.1415
     }
   },
   "deltas": {
-    "novelty_ndcg_at_50": 0.0704,
-    "novelty_auc": 0.1127,
+    "novelty_ndcg_at_50": 0.0752,
+    "novelty_auc": 0.0996,
     "relevance_ndcg_at_20": 0.3557,
-    "combined_ndcg_at_50": -0.2179
+    "combined_ndcg_at_50": -0.2619
   }
 }

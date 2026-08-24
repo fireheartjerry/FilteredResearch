@@ -28,26 +28,28 @@ export const SCORING_VERSION = `${NOVELTY_MODEL_VERSION}+authorship-fieldnorm-v1
 // Fitted on the tuning split (see eval/tune-weights.mjs). Each entry is a
 // direction as well as a magnitude: `invert` means less of this signal is more
 // novel.
-// Fitted by coordinate ascent on the tuning split (eval/tune-weights.mjs), then
-// shrunk toward a uniform prior over every signal that correlates positively on
-// its own. The raw argmax put 0.36 on two correlated co-citation statistics and
-// zeroed the rest; with only 400 labelled papers to fit on, that pattern moved
-// between runs, which is the classic sign of fitting noise. Every signal with
-// individual evidence therefore keeps a non-zero weight.
+// Emitted verbatim by `node eval/tune-weights.mjs`, which fits by coordinate
+// ascent on the tuning split and then shrinks toward a uniform prior over the
+// signals that correlate positively on their own. The shrink is code, not a
+// remark in a comment, so re-running the tuner reproduces these numbers exactly.
+//
+// Text crowding is absent on purpose: measured against real outcomes its rank
+// correlation with disruption is negative, so the shrink rule excludes it. It
+// still does the job no reference signal can -- catching a near-verbatim
+// restatement -- through the ceiling below rather than as a term in the sum.
 //
 // `invert` means less of this signal is more novel.
 export const NOVELTY_WEIGHTS = Object.freeze([
-  { key: "pairSupport", weight: 0.24, invert: true, label: "sources rarely cited together" },
-  { key: "unseenPairFraction", weight: 0.20, invert: false, label: "joins sources nobody has joined" },
-  { key: "canonShare", weight: 0.17, invert: true, label: "not built on the standard canon" },
-  { key: "referenceCount", weight: 0.11, invert: true, label: "not a broad survey" },
-  { key: "unfamiliarReferenceFraction", weight: 0.08, invert: false, label: "draws on outside literature" },
-  { key: "emergentDensity", weight: 0.07, invert: false, label: "introduces new terminology" },
-  { key: "strongestCoupling", weight: 0.04, invert: true, label: "no shared bibliography with existing work" },
-  { key: "genericness", weight: 0.04, invert: true, label: "not a generic restatement of the field" },
-  { key: "coupledPeerFraction", weight: 0.02, invert: true, label: "few papers share its sources" },
-  { key: "crowding", weight: 0.02, invert: true, label: "unlike existing work" },
-  { key: "topicConcentration", weight: 0.01, invert: false, label: "focused on one topic" },
+  { key: "referenceCount", weight: 0.232, invert: true, label: "not a broad survey" },
+  { key: "emergentDensity", weight: 0.196, invert: false, label: "introduces new terminology" },
+  { key: "canonShare", weight: 0.142, invert: true, label: "not built on the standard canon" },
+  { key: "pairSupport", weight: 0.108, invert: true, label: "sources rarely cited together" },
+  { key: "unfamiliarReferenceFraction", weight: 0.088, invert: false, label: "draws on outside literature" },
+  { key: "unseenPairFraction", weight: 0.075, invert: false, label: "joins sources nobody has joined" },
+  { key: "strongestCoupling", weight: 0.062, invert: true, label: "no shared bibliography with existing work" },
+  { key: "coupledPeerFraction", weight: 0.053, invert: true, label: "few papers share its sources" },
+  { key: "genericness", weight: 0.036, invert: true, label: "not a generic restatement of the field" },
+  { key: "topicConcentration", weight: 0.009, invert: false, label: "focused on one topic" },
 ]);
 
 // A near-verbatim restatement of existing work is the least novel thing that can

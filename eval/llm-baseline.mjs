@@ -9,6 +9,7 @@
 // report the comparison without a network call or a penny of runtime cost.
 
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { writeFileSync, readFileSync, existsSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -68,7 +69,22 @@ async function main() {
   const pool = [...eligible].sort((left, right) => (random() < 0.5 ? -1 : 1)).slice(0, SAMPLE);
   console.log(`Scoring ${pool.length} held-out papers with a directly-prompted LLM, ${BATCH} at a time...`);
 
-  const scores = existsSync(OUTPUT) ? JSON.parse(readFileSync(OUTPUT, "utf8")) : {};
+  // Provenance. Without it the comparison is not reproducible by anyone,
+  // including whoever runs this next month. It identifies the CLI and the prompt,
+  // not a pinned model version -- the CLI resolves its own model, and that is a
+  // real limitation of the comparison rather than something this can paper over.
+  let cliVersion = "unknown";
+  try {
+    cliVersion = execFileSync("kimi", ["--version"], { encoding: "utf8", timeout: 60_000 }).trim().split(/\r?\n/)[0];
+  } catch {
+    cliVersion = "unavailable";
+  }
+  const promptHash = createHash("sha256").update(buildPrompt([{ id: "SAMPLE", title: "", abstract: "" }])).digest("hex").slice(0, 16);
+  const provenance = { cli: "kimi", cliVersion, promptHash, batchSize: BATCH, scoredAt: new Date().toISOString() };
+
+  const existing = existsSync(OUTPUT) ? JSON.parse(readFileSync(OUTPUT, "utf8")) : {};
+  const scores = existing.scores || existing;
+  delete scores.provenance;
   const pending = pool.filter((work) => scores[work.id] === undefined);
   console.log(`  ${Object.keys(scores).length} already cached, ${pending.length} to score`);
 
@@ -84,13 +100,14 @@ async function main() {
           accepted += 1;
         }
       }
-      writeFileSync(OUTPUT, `${JSON.stringify(scores, null, 1)}\n`);
+      writeFileSync(OUTPUT, `${JSON.stringify({ provenance, scores }, null, 1)}\n`);
       console.log(`  batch ${Math.floor(start / BATCH) + 1}: ${accepted}/${batch.length} scored (${Object.keys(scores).length} total)`);
     } catch (error) {
       console.log(`  batch ${Math.floor(start / BATCH) + 1} failed: ${String(error.message).slice(0, 160)}`);
     }
   }
-  console.log(`\nWrote ${OUTPUT} with ${Object.keys(scores).length} LLM judgements.`);
+  writeFileSync(OUTPUT, `${JSON.stringify({ provenance, scores }, null, 1)}\n`);
+  console.log(`\nWrote ${OUTPUT} with ${Object.keys(scores).length} LLM judgements from ${cliVersion}.`);
 }
 
 main().catch((error) => {
