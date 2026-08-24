@@ -123,6 +123,27 @@ own `primary_topic`/`topics` match, held out from the ranker). Plus a
 qualitative set — `RAG`, `LLM agents`, `diffusion`, `protein folding`, `causal
 inference`, `sparse autoencoder` — each with a hand-checked top-10.
 
+**NOT AMENDED — and the reason is worth recording.** This criterion's threshold was
+set before anything had been measured, exactly like C1's and C4's, and after five
+method families capped out near 0.45 it looked like the same mistake. It is not.
+A directly-prompted LLM reranking the identical top-100 candidate pool for the
+identical queries reaches **nDCG@20 0.659** (`eval/llm-relevance.mjs`,
+`fixtures/llm-relevance.json`), against 0.406 for the shipped ranker on that same
+pool. The bar is achievable; the task is not the problem.
+
+What is unreachable is the bar *under this project's constraints*. Everything
+tried -- tuned BM25, pseudo-relevance feedback, glossary and semantic query
+expansion, a hybrid lexical-vector score, and a learned reranker over eight
+retrieval features -- lands between 0.39 and 0.45. Even replacing the semantic
+space with a materially better one (PPMI plus power-iteration refinement, which
+lifts same-topic discrimination from AUC 0.67 to 0.73) moves relevance by 0.003.
+The gap is comprehension, and no local bag-of-words method reproduces it.
+
+So the points stay lost rather than the threshold being moved. If the "no
+hosted model at runtime" constraint were ever relaxed -- an optional
+user-supplied key used only for reranking the top hundred -- this criterion is
+reachable. That is a product decision, not a scoring one.
+
 - 15 pts: a graded relevance score exists, is used in ordering, nDCG@20 >= 0.70, all six qualitative top-10s defensible
 - 10 pts: graded score exists, nDCG@20 >= 0.55
 - 5 pts: graded score exists but weak, or not wired into ordering

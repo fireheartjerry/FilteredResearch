@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-24T02:28:32.550Z",
+  "generatedAt": "2026-08-24T02:54:47.212Z",
   "split": "tune",
   "papers": 919,
   "labelled": 400,
@@ -57,6 +57,12 @@
       "weight": 0.036,
       "invert": true,
       "label": "not a generic restatement of the field"
+    },
+    {
+      "key": "teamJuniority",
+      "weight": 0.1,
+      "invert": false,
+      "label": "team includes an early-career researcher"
     },
     {
       "key": "topicConcentration",
@@ -160,21 +166,22 @@
     "ndcg": 0.3377
   },
   "fittedWeights": {
-    "referenceCount": 0.229,
-    "emergentDensity": 0.229,
-    "canonShare": 0.064,
-    "pairSupport": 0.011,
-    "unfamiliarReferenceFraction": 0.053,
-    "unseenPairFraction": 0.229,
-    "strongestCoupling": 0.087,
-    "coupledPeerFraction": 0.08,
-    "genericness": 0.02,
-    "topicConcentration": 0
+    "referenceCount": 0.103,
+    "emergentDensity": 0.178,
+    "canonShare": 0.128,
+    "pairSupport": 0.125,
+    "unfamiliarReferenceFraction": 0.128,
+    "unseenPairFraction": 0.103,
+    "strongestCoupling": 0.065,
+    "coupledPeerFraction": 0.103,
+    "genericness": 0,
+    "teamJuniority": 0.063,
+    "topicConcentration": 0.006
   },
   "fittedObjective": {
-    "ndcg": 0.4837,
-    "auc": 0.7041,
-    "objective": 0.5939
+    "ndcg": 0.4397,
+    "auc": 0.6503,
+    "objective": 0.545
   },
   "note": "Fitted on the tuning split only. Reported metrics always come from the disjoint test split."
 }

@@ -129,13 +129,23 @@ before anything had been measured:
   predicts citations by construction, so adding novelty can only add noise. The
   criterion as written rewarded turning the feed into a prestige list.
 
-**C3 has the same defect and was deliberately left alone.** Its 10-point anchor
-requires relevance nDCG@20 ≥ 0.55; four method families were tried (tuned BM25,
-semantic query expansion, hybrid lexical-vector scoring, pseudo-relevance
-feedback) and the ceiling is ~0.42. Amending a third criterion downward, in my
-own favour, after the number it produces had become the thing being optimised, is
-exactly the move that would hollow out the score. The eight points stay lost and
-the reason is recorded here instead.
+**C3 looked like the same defect and turned out not to be.** Its 10-point anchor
+requires relevance nDCG@20 ≥ 0.55, and five method families capped out near 0.45:
+tuned BM25, pseudo-relevance feedback, glossary and semantic query expansion, a
+hybrid lexical-vector score, and a learned reranker over eight retrieval features.
+The obvious conclusion was that the threshold was unreachable and should be
+re-anchored like C1's.
 
-That caps the reachable total near 90 rather than the 95 originally targeted. The
-remaining gap is a property of the rubric, not of the work.
+Measuring the reference point first showed that conclusion was wrong. A
+directly-prompted LLM reranking the identical top-100 pool for the identical
+queries reaches **0.659**, against 0.406 for the shipped ranker on that pool. The
+bar is achievable. What is unreachable is the bar under a "no hosted model at
+runtime, must fit in a service worker" constraint — and to check that the space
+itself was not the limit, the semantic space was rebuilt with PPMI and
+power-iteration refinement, lifting same-topic discrimination from AUC 0.67 to
+0.73; relevance moved 0.003. The gap is comprehension.
+
+So the threshold stands and the eight points stay lost. The remaining gap is a
+property of the constraints, not of the rubric and not of the effort — which is a
+more useful thing for the reader to know than a re-anchored number would have
+been.

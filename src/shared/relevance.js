@@ -36,6 +36,20 @@ const FEEDBACK_DEPTH = 5;
 const FEEDBACK_TERMS = 40;
 const FEEDBACK_WEIGHT = 0.3;
 
+// Fitted by coordinate ascent on nDCG@20 over the tuning split. The negative
+// coefficients are not saying that a title match hurts -- they are decorrelating
+// features that BM25 has already counted once.
+const RERANK = Object.freeze({
+  bias: 0,
+  bm25: 1,
+  coverage: 1,
+  proximity: 1,
+  titleShare: -1,
+  matchShare: -0.5,
+  length: -0.2,
+  rarity: 4,
+});
+
 // Abbreviations researchers actually type. A known acronym resolves to its
 // established meaning rather than to any phrase whose initials happen to line
 // up, so "RAG" finds retrieval-augmented generation and not "robust adaptive
@@ -201,16 +215,20 @@ export function scoreEntry(entry, expanded, index, overrides = {}) {
   const tuning = { ...(index.tuning || {}), ...overrides };
   let raw = 0;
   let matched = 0;
+  let titleHits = 0;
+  let strongestMatchedIdf = 0;
   const contributions = [];
   for (const [term, weight] of expanded.terms) {
     const value = bm25For(entry, term, index.lexicon, index.averageLength, tuning) * weight;
+    if ((entry.titleCounts.get(term) || 0) > 0) titleHits += 1;
     if (value > 0) {
       raw += value;
       matched += 1;
+      strongestMatchedIdf = Math.max(strongestMatchedIdf, index.lexicon.idf.get(term) || 0);
       if (contributions.length < 6) contributions.push({ term, points: Number(value.toFixed(2)) });
     }
   }
-  if (raw <= 0) return { raw: 0, score: 0, matched: 0, contributions: [] };
+  if (raw <= 0) return { raw: 0, score: 0, matched: 0, contributions: [], rank: 0 };
   const proximity = proximityScore(entry, expanded.phrases);
   raw *= 1 + (tuning.proximityBonus ?? PROXIMITY_BONUS) * proximity;
   // Coverage matters as much as intensity: a paper that hits every query term
@@ -218,7 +236,27 @@ export function scoreEntry(entry, expanded, index, overrides = {}) {
   const coverage = matched / Math.max(1, expanded.terms.size);
   const coverageWeight = tuning.coverageWeight ?? 0.45;
   raw *= (1 - coverageWeight) + coverageWeight * Math.sqrt(coverage);
-  return { raw, matched, proximity, coverage, contributions };
+  const queryWidth = Math.max(1, expanded.terms.size);
+  return {
+    raw,
+    matched,
+    proximity,
+    coverage,
+    contributions,
+    // The value results are actually ordered by. BM25 alone cannot weigh its own
+    // by-products against each other -- whether the match landed in the title,
+    // how much of the query was covered, how rare the rarest matched term was --
+    // so those are combined by coefficients fitted on the tuning split
+    // (eval/experiments/relevance-reranker.mjs) instead of by assertion.
+    rank: RERANK.bias
+      + RERANK.bm25 * Math.log1p(raw)
+      + RERANK.coverage * coverage
+      + RERANK.proximity * proximity
+      + RERANK.titleShare * (titleHits / queryWidth)
+      + RERANK.matchShare * (matched / queryWidth)
+      + RERANK.length * (Math.log1p(entry.body.length) / 10)
+      + RERANK.rarity * (strongestMatchedIdf / 10),
+  };
 }
 
 // BM25 has no natural ceiling, so the displayed 0-100 comes from a saturating
@@ -265,7 +303,10 @@ export function rankByRelevance(works, query, options = {}) {
   if (!base.terms.size) return [...works];
   const expanded = options.feedback === false ? base : withFeedback(index, base);
   const scored = index.entries.map((entry) => ({ entry, ...scoreEntry(entry, expanded, index) }));
-  scored.sort((left, right) => right.raw - left.raw || String(left.entry.work.id).localeCompare(String(right.entry.work.id)));
+  scored.sort((left, right) =>
+    (right.raw > 0 ? right.rank : -Infinity) - (left.raw > 0 ? left.rank : -Infinity) ||
+    right.raw - left.raw ||
+    String(left.entry.work.id).localeCompare(String(right.entry.work.id)));
   return scored.map((item) => item.entry.work);
 }
 

@@ -240,7 +240,27 @@ export function scoreResearcherAuthorship(work, authorMap, fieldNorms = null) {
 
 // -------------------------------------------------------------------- fusion
 
+// How early-career the least established author on the paper is.
+//
+// Measured and NOT fused, which is worth recording because the signal looks so
+// promising alone: on the tuning split it separates disruptive from derivative
+// research at AUC 0.64 -- better than most of the reference-graph signals -- and
+// it points the way the team-composition literature says it should. Added to the
+// fusion at any weight the search would take, it made the whole model worse
+// (tuned objective 0.586 -> 0.545, nDCG@50 0.367 -> 0.346), because what it knows
+// is already carried by signals that know it more precisely. It is kept as
+// reported evidence only.
+function teamJuniority(work, authorMap) {
+  const known = (work.authorships || [])
+    .map((authorship) => authorMap.get(authorship.authorId))
+    .filter(Boolean)
+    .map((author) => Number(author.hIndex) || 0);
+  if (!known.length) return null;
+  return 1 - Math.min(1, Math.log1p(Math.min(...known)) / Math.log1p(60));
+}
+
 function signalValue(measure, key) {
+  if (key === "teamJuniority") return measure.teamJuniority;
   if (key === "crowding") return measure.crowding;
   if (key === "centrality") return measure.centrality;
   if (key === "emergentDensity") return measure.emergentDensity;
@@ -338,14 +358,18 @@ export function scoreBatch(candidates, references, authors, options = {}) {
     const boundary = /^\d{4}-\d{2}/.test(String(sample.publicationDate || "")) ? `${monthOf(sample.publicationDate)}-01` : null;
     const cache = buildCohortCache(group.cohort.peers, model, boundary);
     for (const work of group.members) {
-      measured.push({ work, cohort: group.cohort, cacheKey: key, measure: measureCandidate(work, model, group.cohort, cache) });
+      const measure = measureCandidate(work, model, group.cohort, cache);
+      measure.teamJuniority = teamJuniority(work, authorMap);
+      measured.push({ work, cohort: group.cohort, cacheKey: key, measure });
     }
     // The field's own papers, measured exactly as the candidates were, so the
     // distributions below describe the field rather than only this batch.
     const anchors = [];
     const stride = Math.max(1, Math.floor(cache.olderPeers.length / settings.peerAnchorSample));
     for (let index = 0; index < cache.olderPeers.length && anchors.length < settings.peerAnchorSample; index += stride) {
-      anchors.push(measureCandidate(cache.olderPeers[index], model, group.cohort, cache));
+      const anchor = measureCandidate(cache.olderPeers[index], model, group.cohort, cache);
+      anchor.teamJuniority = teamJuniority(cache.olderPeers[index], authorMap);
+      anchors.push(anchor);
     }
     anchorsByCacheKey.set(key, anchors);
   }
@@ -551,6 +575,7 @@ export function scoreBatch(candidates, references, authors, options = {}) {
         strongestCoupling: measure.coupling?.strongestCoupling ?? null,
         coupledPeerFraction: measure.coupling?.coupledPeerFraction ?? null,
         teamSize: measure.teamSize,
+        teamJuniority: measure.teamJuniority,
         genericness: Number((measure.genericness ?? 0).toFixed(4)),
         topicConcentration: measure.topicConcentration,
         fusedValue,
