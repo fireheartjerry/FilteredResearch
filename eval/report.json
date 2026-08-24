@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-24T17:20:24.940Z",
+  "generatedAt": "2026-08-24T17:39:37.752Z",
   "split": "test",
   "corpus": {
     "candidates": 2267,
@@ -93,15 +93,15 @@
       "answerable": true,
       "top": [
         "Density functional theory calculations for cathode materials of proton-conducting solid oxide fuel cells: A mi",
-        "Electromagnetism (20152 Phys110 Week1 Day1 Hour1)",
-        "Ethylene-Tetrafluoroethylene: A Review",
-        "Native point defects and their implications for the Dirac point gap at MnBi$_2$Te$_4$(0001)",
         "Benchmarking Density Functional Approximations for Diamagnetic and Paramagnetic Molecules in Nonuniform Magnet",
-        "Your New IEEE Spectrum Website: An Enhanced Member Experience is Central to the New Spectrum Website",
-        "Animated Learning",
+        "Atomistic electronic structure in the single-chain limit of organic conductors",
+        "Noether’s theorem in statistical mechanics",
+        "Data from \"Solving the Hubbard model using density matrix embedding theory and the variational quantum eigenso",
         "A Hidden Variable Model of Hydrogen Energy Spectra",
-        "Inelastic Neutron Scattering Study of Magnetic Exchange Pathways in MnS",
-        "Atomistic electronic structure in the single-chain limit of organic conductors"
+        "Equivariant Manifold Flows",
+        "Post-Hartree–Fock method in quantum chemistry for quantum computer",
+        "Comprehensive Study of Lithium Adsorption and Diffusion on Janus Mo/WXY (X, Y = S, Se, Te) Using First-Princip",
+        "Theory of unconventional superconductivity in nickelate-based materials*"
       ]
     },
     {
@@ -127,15 +127,15 @@
       "answerable": true,
       "top": [
         "Incidental Brain MRI Findings in Children: A Systematic Review and Meta-Analysis",
+        "STUDY OF NUCLEAR MAGNETIC RESONANCE SPECTROSCOPY WITH APPLICATIONS: A COMPREHENSIVE REVIEW",
         "Trimodality PET/CT/MRI and Radiotherapy: A Mini-Review",
         "Radiation Oncology Exhibits",
-        "Ischemic hypoxic encephalopathy: The role of MRI of neonatal injury and medico-legal implication",
-        "Imaging andrology of the future: Where functional imaging embraces the clinic",
         "Frequency of Anatomical Variations and Congenital Anomalies in Pancreatobiliary Tract through Magnetic Resonan",
         "Denoising of MR and CT images using cascaded multi-supervision convolutional neural networks with progressive ",
-        "STUDY OF NUCLEAR MAGNETIC RESONANCE SPECTROSCOPY WITH APPLICATIONS: A COMPREHENSIVE REVIEW",
         "Comparison of phosphonate, hydroxypropyl and carboxylate pendants in Fe(III) macrocyclic complexes as MRI cont",
-        "Deep Learning for Ultrasound Beamforming"
+        "Ischemic hypoxic encephalopathy: The role of MRI of neonatal injury and medico-legal implication",
+        "Is hyperpolarised gas magnetic resonance imaging a valid and reliable tool to detect lung health in cystic fib",
+        "Imaging andrology of the future: Where functional imaging embraces the clinic"
       ]
     },
     {
@@ -190,7 +190,7 @@
       ]
     }
   ],
-  "scoringMs": 9828,
+  "scoringMs": 10181,
   "baseline": {
     "novelty": {
       "evaluated": 626,
@@ -366,7 +366,7 @@
         ]
       }
     ],
-    "scoringMs": 2959
+    "scoringMs": 3664
   },
   "llmBaseline": {
     "papers": 300,

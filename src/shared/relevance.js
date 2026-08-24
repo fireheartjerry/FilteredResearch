@@ -328,8 +328,15 @@ export async function rankByRelevanceWithModel(works, query, options = {}) {
     return [entry.work.id, result.raw > 0 ? result.rank : -50];
   }));
 
+  // The model is given the EXPANDED query, not the raw one. An encoder has no
+  // idea that "DFT" means density functional theory -- it is three letters that
+  // occur in many contexts -- so embedding the bare acronym returned newsletters
+  // and animal studies. Handing it the glossary expansion alongside the original
+  // restores the acronym handling that the lexical path always had, and which
+  // going fully semantic would otherwise have thrown away.
+  const semanticQuery = [query, ...base.expansions.filter((term) => term.includes(" "))].join(". ");
   const vectors = await embedWorks(works, options.embedding || {});
-  const queryVector = vectors ? await embedQuery(query, options.embedding || {}) : null;
+  const queryVector = vectors ? await embedQuery(semanticQuery, options.embedding || {}) : null;
   if (!vectors || !queryVector) {
     return [...works].sort((left, right) =>
       (lexical.get(right.id) ?? -50) - (lexical.get(left.id) ?? -50) ||
