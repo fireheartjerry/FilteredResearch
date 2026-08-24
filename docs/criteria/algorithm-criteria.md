@@ -365,6 +365,17 @@ against the separation reaches 0.691 on the raw fusion, and three candidate
 signals that looked strong alone (reference popularity, team juniority, semantic
 crowding) each made the model worse when added.
 
+The last untried idea was an interaction rather than another signal. Uzzi et al.
+(2013) do not claim atypical combinations predict impact on their own -- they
+claim the *conjunction* does, work conventional at its median with a tail of
+unusual pairings -- and a weighted sum of ranks cannot express a conjunction
+however the weights are set. Built and measured
+(`eval/experiments/interaction-terms.mjs`), it does not survive the split: AUC
+0.569 on tune, **0.481 on test**. Three other interaction terms and venue
+commonality were measured alongside it and none beats the signals already
+shipping. The ceiling is the feature set, and the feature set has now been
+searched.
+
 **C5** needs corpus drift under 5 points, at 6.8 after five attempted fixes each
 of which made it worse. Every one removed a piece of corpus-relativity, and
 corpus-relativity is what the accuracy is built on.
