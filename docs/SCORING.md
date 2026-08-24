@@ -142,8 +142,38 @@ harvested and folded back in at reduced weight (pseudo-relevance feedback), whic
 is what lets a phrase find papers that describe the same thing in the field's own
 jargon.
 
-Measured on held-out topic judgements, nDCG@20 goes from **0.03 to 0.42**, MRR from
-0.04 to 0.73, recall@100 from 0.06 to 0.61.
+### The bundled sentence model
+
+Lexical retrieval has a ceiling on this task and it is not high. A reader asking
+about "quantum and electron transport phenomena" wants papers that say "ballistic
+conduction in nanowires", and no amount of term weighting bridges that. Five
+families were measured against the gap -- tuned BM25, pseudo-relevance feedback,
+glossary and corpus-derived query expansion, a hybrid lexical-vector score, and a
+learned reranker over eight retrieval features -- and all capped near nDCG@20 0.45.
+
+The extension therefore ships a small sentence-embedding model
+(`all-MiniLM-L6-v2`, quantized, 22 MB) and orders interest-matched results by
+semantic similarity, with the lexical score as the fallback and the tie-break.
+Nothing is downloaded at runtime: the weights and the inference runtime are files
+inside the extension, which is what Manifest V3 requires.
+
+Two things worth knowing about that choice:
+
+- **It is used for relevance only.** Pointed at novelty, similarity in the same
+  space separates disruptive from derivative research at AUC 0.501 -- chance --
+  so the scoring pass never touches it and never pays for it.
+- **There is no cheaper version.** Distilling the model into shipped word vectors
+  would have cost 2 MB instead of 22; measured, it reaches 0.465, because
+  averaging static word vectors discards what the model actually knows.
+
+Embedding a paper costs about 28 ms, so vectors are cached by work id: a paper is
+embedded once, the first time it is ranked, and reused afterwards. An install with
+no interest phrases never loads the model at all.
+
+Measured on held-out topic judgements, nDCG@20 goes from **0.03 to 0.59**, MRR from
+0.04 to 0.88, recall@100 from 0.06 to 0.71. Without the model present the ranker
+degrades to lexical order and scores 0.43, which is still seventeen times the
+0.025 it replaced.
 
 ## Ordering and selectivity
 

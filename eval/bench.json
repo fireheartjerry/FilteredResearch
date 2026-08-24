@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-24T16:20:40.475Z",
+  "generatedAt": "2026-08-24T16:54:09.805Z",
   "candidates": 10000,
   "peers": 3200,
   "isolatedProcesses": true,
@@ -9,19 +9,19 @@
   "results": [
     {
       "name": "v1.0.1 baseline",
-      "wallClockMs": 12787,
+      "wallClockMs": 12398,
       "peakRssMb": 265,
       "runs": [
         {
-          "wallClockMs": 12296,
+          "wallClockMs": 12398,
           "peakRssMb": 265
         },
         {
-          "wallClockMs": 12834,
+          "wallClockMs": 12816,
           "peakRssMb": 266
         },
         {
-          "wallClockMs": 12787,
+          "wallClockMs": 11973,
           "peakRssMb": 265
         }
       ],
@@ -29,25 +29,25 @@
     },
     {
       "name": "current",
-      "wallClockMs": 13678,
-      "peakRssMb": 377,
+      "wallClockMs": 13679,
+      "peakRssMb": 297,
       "runs": [
         {
-          "wallClockMs": 13702,
-          "peakRssMb": 364
+          "wallClockMs": 13924,
+          "peakRssMb": 384
         },
         {
-          "wallClockMs": 13041,
-          "peakRssMb": 377
+          "wallClockMs": 13430,
+          "peakRssMb": 295
         },
         {
-          "wallClockMs": 13678,
-          "peakRssMb": 398
+          "wallClockMs": 13679,
+          "peakRssMb": 297
         }
       ],
       "scored": 10000
     }
   ],
-  "ratio": 1.07,
-  "memoryRatio": 1.423
+  "ratio": 1.103,
+  "memoryRatio": 1.121
 }

@@ -6,7 +6,7 @@
   "description": "A local-first Chrome extension for finding unusually novel research and papers by established researchers.",
   "scripts": {
     "test": "node --test test/*.test.js",
-    "check": "node --check src/background/service-worker.js && node --check src/sidepanel/sidepanel.js && node --check src/options/options.js && node --check src/notifications/notifications.js && node --check src/shared/refresh-progress.js",
+    "check": "node --check src/background/service-worker.js && node --check src/sidepanel/sidepanel.js && node --check src/options/options.js && node --check src/notifications/notifications.js && node --check src/shared/refresh-progress.js && node --check src/shared/embedding.js && node --check src/shared/relevance.js",
     "package": "node scripts/package.mjs",
     "zip": "npm run package && node scripts/zip.mjs",
     "eval": "node eval/run.mjs",
@@ -14,7 +14,8 @@
     "eval:adversarial": "node eval/adversarial.mjs",
     "eval:calibration": "node eval/calibration.mjs",
     "eval:robustness": "node eval/robustness.mjs",
-    "bench": "node --expose-gc eval/bench.mjs"
+    "bench": "node --expose-gc eval/bench.mjs",
+    "fetch-model": "node scripts/fetch-model.mjs"
   },
   "engines": {
     "node": ">=20"

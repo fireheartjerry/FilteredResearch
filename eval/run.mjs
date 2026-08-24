@@ -140,7 +140,7 @@ async function evaluateRanker(adapter, corpus, labels, queries) {
   });
   const perQuery = [];
   for (const entry of queries) {
-    const ranked = rankForQuery(adapter, relevanceCorpus, entry.query);
+    const ranked = await rankForQueryAsync(adapter, relevanceCorpus, entry.query, corpus.useModel);
     const gainOf = (work) => entry.gains.get(work.id) || 0;
     const relevant = (work) => gainOf(work) >= 2;
     perQuery.push({
@@ -170,7 +170,7 @@ async function evaluateRanker(adapter, corpus, labels, queries) {
       .map((entry) => ({ query: entry.query, ndcg_at_20: round(entry.ndcg_at_20) })),
   };
 
-  const qualitative = QUALITATIVE_QUERIES.map((query) => {
+  const qualitative = await Promise.all(QUALITATIVE_QUERIES.map(async (query) => {
     const needle = query.toLowerCase();
     // How many papers even contain the phrase. Without this a query the corpus
     // cannot answer looks identical to a ranking failure.
@@ -180,11 +180,31 @@ async function evaluateRanker(adapter, corpus, labels, queries) {
       query,
       corpusMatches,
       answerable: corpusMatches >= 5,
-      top: rankForQuery(adapter, relevanceCorpus, query).slice(0, 10).map((work) => work.title.slice(0, 110)),
+      top: (await rankForQueryAsync(adapter, relevanceCorpus, query, corpus.useModel)).slice(0, 10).map((work) => work.title.slice(0, 110)),
     };
-  });
+  }));
 
   return { name: adapter.name, scoringMs, novelty, authorship, combined, relevance, qualitative };
+}
+
+// Model-backed ranking when the weights are present, lexical otherwise. Which
+// path ran is recorded in the report, so a run without weights reads as a
+// different configuration rather than as a worse algorithm.
+// A file: URL pathname keeps a leading slash before a Windows drive letter,
+// which every fs call then rejects.
+const MODEL_ROOT = new URL("../vendor/", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
+
+export const EMBEDDING_OPTIONS = {
+  importTransformers: () => import("@xenova/transformers"),
+  modelPath: MODEL_ROOT,
+  batchSize: 32,
+};
+
+async function rankForQueryAsync(adapter, works, query, useModel) {
+  if (useModel && typeof adapter.rankByRelevanceWithModel === "function") {
+    return adapter.rankByRelevanceWithModel(works, query, { embedding: EMBEDDING_OPTIONS });
+  }
+  return rankForQuery(adapter, works, query);
 }
 
 function rankForQuery(adapter, works, query) {
@@ -200,6 +220,8 @@ function rankForQuery(adapter, works, query) {
 
 async function main() {
   const corpus = loadCorpus();
+  const modelPresent = existsSync(MODEL_ROOT + "Xenova/all-MiniLM-L6-v2/onnx/model_quantized.onnx");
+  corpus.useModel = modelPresent && process.env.FR_EVAL_NO_MODEL !== "1";
   const relevanceCorpus = loadCorpus({ forRelevance: true });
   corpus.relevanceCandidates = relevanceCorpus.candidates;
   corpus.rawById = new Map(corpus.rawCandidates.map((work) => [work.id, work]));
@@ -286,6 +308,7 @@ async function main() {
     novelty: current.novelty,
     authorship: current.authorship,
     combined: current.combined,
+    relevanceRanker: corpus.useModel ? "lexical + bundled sentence model" : "lexical only (model weights absent)",
     relevance: current.relevance,
     qualitative: current.qualitative,
     scoringMs: current.scoringMs,

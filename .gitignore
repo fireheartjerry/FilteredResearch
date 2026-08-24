@@ -13,3 +13,4 @@ dist/
 eval/fixtures/works-stage.json.gz
 eval/*.log
 _review/
+vendor/

@@ -98,6 +98,10 @@ export async function currentAdapter() {
     // computed one document at a time.
     rankByRelevance:
       (await import("../../src/shared/filters.js")).rankByRelevance || null,
+    // Present only when the model has been fetched (npm run fetch-model). The
+    // harness prefers it when available and reports which path produced the
+    // number, so a run without weights is never mistaken for a worse algorithm.
+    rankByRelevanceWithModel: (await import("../../src/shared/relevance.js")).rankByRelevanceWithModel || null,
     applySelectivity: ranking.applySelectivity,
   };
 }

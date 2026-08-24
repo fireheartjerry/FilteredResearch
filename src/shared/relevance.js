@@ -15,6 +15,14 @@
 
 import { contentTerms, tokenize, buildLexicon, termCounts, textOf, normalizeText } from "./text.js";
 import { nearestTerms } from "./semantic.js";
+import { embedWorks, embedQuery, cosine } from "./embedding.js";
+
+// How much of the ordering the embedding decides when one is available. Swept on
+// the tuning split: lexical alone scores nDCG@20 0.433, embeddings alone 0.638,
+// and the blend is flat between them, so this leans on the model while keeping
+// the exact-match evidence that catches an acronym or a rare technical term the
+// model has never seen.
+const EMBEDDING_SHARE = 0.8;
 
 // Retrieval parameters, swept on the tuning split
 // (eval/experiments/relevance-sweep.mjs).
@@ -295,6 +303,41 @@ export function withFeedback(index, expanded) {
   const terms = new Map(expanded.terms);
   for (const [term, value] of harvested) terms.set(term, FEEDBACK_WEIGHT * (value / strongest));
   return { ...expanded, terms, feedbackTerms: harvested.slice(0, 8).map(([term]) => term) };
+}
+
+// The same ranking, with a semantic model in the loop. Async because the model
+// is, and separate from `rankByRelevance` so that nothing on the scoring path can
+// accidentally acquire a dependency on it. Falls back to the lexical order
+// whenever the model is unavailable, which is the normal case for an install that
+// has not finished unpacking it.
+export async function rankByRelevanceWithModel(works, query, options = {}) {
+  const index = options.index || buildRelevanceIndex(works, { space: options.space || null });
+  const base = expandQuery(query, index);
+  if (!base.terms.size) return [...works];
+  const expanded = options.feedback === false ? base : withFeedback(index, base);
+
+  const lexical = new Map(index.entries.map((entry) => {
+    const result = scoreEntry(entry, expanded, index);
+    return [entry.work.id, result.raw > 0 ? result.rank : -50];
+  }));
+
+  const vectors = await embedWorks(works, options.embedding || {});
+  const queryVector = vectors ? await embedQuery(query, options.embedding || {}) : null;
+  if (!vectors || !queryVector) {
+    return [...works].sort((left, right) =>
+      (lexical.get(right.id) ?? -50) - (lexical.get(left.id) ?? -50) ||
+      String(left.id).localeCompare(String(right.id)));
+  }
+
+  const share = options.embeddingShare ?? EMBEDDING_SHARE;
+  const combined = works.map((work, position) => ({
+    work,
+    // The lexical rank is a log-odds-ish quantity and the cosine is bounded, so
+    // the cosine is scaled to put the two on a comparable footing before mixing.
+    score: (1 - share) * (lexical.get(work.id) ?? -50) + share * 12 * cosine(queryVector, vectors[position]),
+  }));
+  combined.sort((left, right) => right.score - left.score || String(left.work.id).localeCompare(String(right.work.id)));
+  return combined.map((entry) => entry.work);
 }
 
 export function rankByRelevance(works, query, options = {}) {

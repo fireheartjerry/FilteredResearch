@@ -71,6 +71,14 @@ The primary user chooses an OpenAlex field/subfield and an index depth in the si
   taxonomy.
 - Rank results by graded relevance to the user's interest phrases, not by a
   boolean match. Interests still never exclude a paper when a category is chosen.
+- Order interest-matched results with a sentence-embedding model bundled inside
+  the extension, falling back to the lexical order whenever the model is absent
+  or fails to load. The weights and the inference runtime ship as files; no code
+  or data is fetched at runtime, and an install that sets no interest phrase never
+  loads the model.
+- Use that model for relevance only. It carries no novelty signal -- measured at
+  chance against real disruption -- so the scoring pass does not touch it.
+- Cache an embedding per work so a paper is encoded once and reused.
 - Convert selectivity 1-100 into logarithmic target top-fractions using the
   documented anchors.
 - Apply novelty and authorship percentile cutoffs with AND.

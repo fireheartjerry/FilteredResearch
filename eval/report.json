@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-24T16:33:56.363Z",
+  "generatedAt": "2026-08-24T16:51:16.289Z",
   "split": "test",
   "corpus": {
     "candidates": 2267,
@@ -55,33 +55,34 @@
     "beats_novelty_alone_on_citations": true,
     "beats_authorship_alone_on_novelty": true
   },
+  "relevanceRanker": "lexical + bundled sentence model",
   "relevance": {
     "queries": 41,
-    "ndcg_at_20": 0.4333,
-    "ndcg_at_10": 0.4215,
-    "mrr": 0.7313,
-    "recall_at_100": 0.6169,
-    "precision_at_10": 0.3488,
+    "ndcg_at_20": 0.5928,
+    "ndcg_at_10": 0.5709,
+    "mrr": 0.876,
+    "recall_at_100": 0.7108,
+    "precision_at_10": 0.4659,
     "worst_queries": [
       {
+        "query": "Advanced Neural Network Applications",
+        "ndcg_at_20": 0.1549
+      },
+      {
         "query": "Particle physics theoretical and experimental studies",
-        "ndcg_at_20": 0.0123
+        "ndcg_at_20": 0.2104
       },
       {
         "query": "Spectroscopy and Quantum Chemical Studies",
-        "ndcg_at_20": 0.0294
+        "ndcg_at_20": 0.2161
       },
       {
         "query": "Quantum and electron transport phenomena",
-        "ndcg_at_20": 0.0321
+        "ndcg_at_20": 0.2172
       },
       {
         "query": "Conducting polymers and applications",
-        "ndcg_at_20": 0.0332
-      },
-      {
-        "query": "Magnetic properties of thin films",
-        "ndcg_at_20": 0.0749
+        "ndcg_at_20": 0.2849
       }
     ]
   },
@@ -92,15 +93,15 @@
       "answerable": true,
       "top": [
         "Density functional theory calculations for cathode materials of proton-conducting solid oxide fuel cells: A mi",
-        "Inelastic Neutron Scattering Study of Magnetic Exchange Pathways in MnS",
-        "Density functional theory investigation on lattice dynamics, elastic properties and origin of vanished magneti",
-        "Interactions between Sterically Stabilized Nanoparticles: The Effects of Brush Bidispersity and Chain Stiffnes",
-        "Benchmarking Density Functional Approximations for Diamagnetic and Paramagnetic Molecules in Nonuniform Magnet",
         "Native point defects and their implications for the Dirac point gap at MnBi$_2$Te$_4$(0001)",
-        "A mini-review of carbon-resistant anode materials for solid oxide fuel cells",
-        "Optical, Electrochemical, and Photoelectrochemical Behavior of Copper Pyrovanadate: A Unified Theoretical and ",
-        "Magnetic crystalline-symmetry-protected axion electrodynamics and field-tunable unpinned Dirac cones in EuIn2A",
-        "Prediction of chemically ordered dual transition metal carbides (MXenes) as high-capacity anode materials for "
+        "Benchmarking Density Functional Approximations for Diamagnetic and Paramagnetic Molecules in Nonuniform Magnet",
+        "Inelastic Neutron Scattering Study of Magnetic Exchange Pathways in MnS",
+        "Atomistic electronic structure in the single-chain limit of organic conductors",
+        "Comprehensive Study of Lithium Adsorption and Diffusion on Janus Mo/WXY (X, Y = S, Se, Te) Using First-Princip",
+        "Density functional theory investigation on lattice dynamics, elastic properties and origin of vanished magneti",
+        "Ultranarrow TaS2 Nanoribbons",
+        "Islands and Page curves in 4d from Type IIB",
+        "Lanthanide Ions Sensitization by Small Noble Metal Nanoclusters"
       ]
     },
     {
@@ -109,15 +110,15 @@
       "answerable": true,
       "top": [
         "Density functional theory calculations for cathode materials of proton-conducting solid oxide fuel cells: A mi",
-        "Inelastic Neutron Scattering Study of Magnetic Exchange Pathways in MnS",
-        "Density functional theory investigation on lattice dynamics, elastic properties and origin of vanished magneti",
-        "Interactions between Sterically Stabilized Nanoparticles: The Effects of Brush Bidispersity and Chain Stiffnes",
-        "Native point defects and their implications for the Dirac point gap at MnBi$_2$Te$_4$(0001)",
         "Benchmarking Density Functional Approximations for Diamagnetic and Paramagnetic Molecules in Nonuniform Magnet",
-        "Optical, Electrochemical, and Photoelectrochemical Behavior of Copper Pyrovanadate: A Unified Theoretical and ",
-        "Magnetic crystalline-symmetry-protected axion electrodynamics and field-tunable unpinned Dirac cones in EuIn2A",
-        "Prediction of chemically ordered dual transition metal carbides (MXenes) as high-capacity anode materials for ",
-        "Anisotropic transport and optical birefringence of triclinic bulk and monolayer NbX 2 Y 2 (X = S, Se and Y = C"
+        "Noether’s theorem in statistical mechanics",
+        "Atomistic electronic structure in the single-chain limit of organic conductors",
+        "Density functional theory investigation on lattice dynamics, elastic properties and origin of vanished magneti",
+        "Data from \"Solving the Hubbard model using density matrix embedding theory and the variational quantum eigenso",
+        "Inelastic Neutron Scattering Study of Magnetic Exchange Pathways in MnS",
+        "Comprehensive Study of Lithium Adsorption and Diffusion on Janus Mo/WXY (X, Y = S, Se, Te) Using First-Princip",
+        "Equivariant Manifold Flows",
+        "Interactions between Sterically Stabilized Nanoparticles: The Effects of Brush Bidispersity and Chain Stiffnes"
       ]
     },
     {
@@ -126,15 +127,15 @@
       "answerable": true,
       "top": [
         "Incidental Brain MRI Findings in Children: A Systematic Review and Meta-Analysis",
-        "Laser-detected magnetic resonance induced by radio-frequency two-photon processes",
-        "Is hyperpolarised gas magnetic resonance imaging a valid and reliable tool to detect lung health in cystic fib",
-        "STUDY OF NUCLEAR MAGNETIC RESONANCE SPECTROSCOPY WITH APPLICATIONS: A COMPREHENSIVE REVIEW",
-        "Investigation of hydration and setting process in nanosilica-cement blended pastes: In situ characterization u",
         "Trimodality PET/CT/MRI and Radiotherapy: A Mini-Review",
-        "Frequency of Anatomical Variations and Congenital Anomalies in Pancreatobiliary Tract through Magnetic Resonan",
+        "Radiation Oncology Exhibits",
         "Imaging andrology of the future: Where functional imaging embraces the clinic",
-        "Case of Steroid-Sensitive Neuronopathy as a Differential Diagnosis to Dissociative Paralysis in Conversion Dis",
-        "Polarization Reversal of Low‐Frequency Magnetic Variation in the Lunar Wake"
+        "Ischemic hypoxic encephalopathy: The role of MRI of neonatal injury and medico-legal implication",
+        "STUDY OF NUCLEAR MAGNETIC RESONANCE SPECTROSCOPY WITH APPLICATIONS: A COMPREHENSIVE REVIEW",
+        "Frequency of Anatomical Variations and Congenital Anomalies in Pancreatobiliary Tract through Magnetic Resonan",
+        "Comparison of phosphonate, hydroxypropyl and carboxylate pendants in Fe(III) macrocyclic complexes as MRI cont",
+        "Laser-detected magnetic resonance induced by radio-frequency two-photon processes",
+        "Is hyperpolarised gas magnetic resonance imaging a valid and reliable tool to detect lung health in cystic fib"
       ]
     },
     {
@@ -143,15 +144,15 @@
       "answerable": false,
       "top": [
         "FDA-authorized COVID-19 vaccines are effective per real-world evidence synthesized across a multi-state health",
-        "Factors associated with deaths due to COVID-19 versus other causes: population-based cohort analysis of UK pri",
+        "COVID-19 in Children with Cancer and Continuation of Cancer-Directed Therapy During the Infection",
         "Vaccination history for diphtheria and tetanus is associated with less severe COVID-19",
         "The Alteration of Clinical and Laboratory Signs and Symptoms of COVID-19 in Re-infection: A Case Report",
-        "Incidence Rate of COVID-19 Infection in Hemoglobinopathies: A Systematic Review and Meta-analysis",
-        "Vaccine Prioritisation Using Bluetooth Exposure Notification Apps",
-        "Unravelling the early warning capability of wastewater surveillance for COVID-19: A temporal study on SARS-CoV",
         "Predictive Analytics of COVID-19 Pandemic: Statistical Modelling Perspective",
+        "COVID-19 Isolation and Contact Tracing with Country Samples: A Systematic Review",
+        "Computed tomography findings in 3,557 COVID-19 infected children: a systematic review",
         "Factors associated with poor outcomes in pneumonia patients during the COVID-19 pandemics",
-        "COVID-19 clinical phenotypes and short-term outcomes: differences between the first and the second wave of pan"
+        "Digital PCR to quantify ChAdOx1 nCoV-19 copies in blood and tissues",
+        "Anchoring on COVID-19: A Case Report of Human Granulocytic Anaplasmosis Masquerading as COVID-19"
       ]
     },
     {
@@ -159,16 +160,16 @@
       "corpusMatches": 3,
       "answerable": false,
       "top": [
-        "Competition between charge-density-wave and superconductivity in the kagome metal RbV3Sb5",
         "InSbAs Two-Dimensional Electron Gases as a Platform for Topological Superconductivity",
-        "Theory of unconventional superconductivity in nickelate-based materials*",
-        "First-principles study of electronic structure , magnetic and optical properties of Ti, V, Co and Ni doped two",
-        "Giant demagnetization effects induced by superconducting films",
-        "Crossover between short- and long-range proximity effects in superconductor/ferromagnet/superconductor junctio",
         "Constructing synthetic materials with superconducting quantum circuits",
-        "Field-free magnetization switching induced by the unconventional spin–orbit torque from WTe2",
-        "An ab initio study of structural, elastic and electronic properties of hexagonal MAuGe (M = Lu, Sc) compounds",
-        "Anomalies in the electronic structure of a 5$d$ transition metal oxide, IrO$_2$"
+        "Theory of unconventional superconductivity in nickelate-based materials*",
+        "Competition between charge-density-wave and superconductivity in the kagome metal RbV3Sb5",
+        "Revisiting the properties of the heavy-fermion superconductor UBe 13 via polycrystalline samples",
+        "Robustness of vortex-bound Majorana zero modes against correlated disorder",
+        "Crossover between short- and long-range proximity effects in superconductor/ferromagnet/superconductor junctio",
+        "Giant demagnetization effects induced by superconducting films",
+        "Dodecanacci superconductor–semiconductor dispersive photonic quasicrystal one dimensional",
+        "Suppression of Pseudogap Behavior and Antiferromagnetic Fluctuations by Electron Doping in T′-La1.8Eu0.2CuO4−y"
       ]
     },
     {
@@ -176,20 +177,20 @@
       "corpusMatches": 0,
       "answerable": false,
       "top": [
-        "Fabrication of ZnS/ZnO composite photocatalysts by spin-coating ZnS nanoparticles on ZnO thin film",
-        "Epitaxial growth technique for single-crystalline PbTiO 3 thin film on Si substrate using an HfO 2 buffer laye",
-        "Enhanced Free Surface Mobility Facilitates Release of Free-volume Holes in Thin-film Polymer Glasses",
         "Analysis of multi-layer thin-film materials using benchtop XRD and XRF systems",
-        "Influence of the magnetic field on the structural characteristics of granular Co Ag100- thin film alloys",
-        "Highly efficient second-harmonic generation in an electro-optic chiral material using total-internal-reflectio",
         "Deposition of Nb-Si-C Thin Films by Radio Frequency Magnetron Sputtering",
-        "Correlation of Thermoelectric Performance, Domain Morphology and Doping Level in PEDOT:PSS Thin Films Post‐Tre",
-        "Light-induced topological phases in thin films of magnetically doped topological insulators",
-        "Lateral Heterostructures: 1D p–n Junction Electronic and Optoelectronic Devices from Transition Metal Dichalco"
+        "Optical and Morphological Properties of Electropolymerized Semiconductor Polyaniline Thin Films: Effect of Thi",
+        "Enhanced Free Surface Mobility Facilitates Release of Free-volume Holes in Thin-film Polymer Glasses",
+        "Boundary-Scattering Induced Seebeck Coefficient Enhancement in Thin Films within Relaxation Time Approximation",
+        "In situ X-ray photoelectron spectroscopy study: effect of inert Ar sputter etching on the core-level spectra o",
+        "Influence of the magnetic field on the structural characteristics of granular Co Ag100- thin film alloys",
+        "Epitaxial growth technique for single-crystalline PbTiO 3 thin film on Si substrate using an HfO 2 buffer laye",
+        "Invisible Spherical Objects Made of Isotropic Materials",
+        "Influence of Fluorine-Containing Monomer Content on the Hydrophobic and Transparent Properties of Nanohybrid S"
       ]
     }
   ],
-  "scoringMs": 10052,
+  "scoringMs": 10978,
   "baseline": {
     "novelty": {
       "evaluated": 626,
@@ -365,7 +366,7 @@
         ]
       }
     ],
-    "scoringMs": 4178
+    "scoringMs": 3896
   },
   "llmBaseline": {
     "papers": 300,
@@ -393,7 +394,7 @@
   "deltas": {
     "novelty_ndcg_at_50": 0.0752,
     "novelty_auc": 0.0996,
-    "relevance_ndcg_at_20": 0.408,
+    "relevance_ndcg_at_20": 0.5675,
     "combined_ndcg_at_50": -0.2619
   }
 }
