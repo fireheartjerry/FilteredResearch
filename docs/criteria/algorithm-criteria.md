@@ -334,20 +334,31 @@ marks on C1 or C3 for the unmodified code is miscalibrated.
 | 7 | **81 / 100** | all pass | Memory benchmark made reproducible (isolated processes, three runs, bounded heap, medians): 1.11x rather than the 2.3x a contaminated single run had reported. C7 to full marks. |
 | 8 | 81 / 100 | all pass | Four attacks on corpus stability and two new signal families, all measured and all reverted. No score change; the negative results are the output. |
 | 9 | **81 / 100** | all pass | Bundled-model question settled by measurement rather than assertion. No score change: the finding is recorded, not implemented. |
+| 10 | **86 / 100** | all pass | Sentence model bundled and wired into relevance ordering. C3 5 to 10. |
+| 11 | **88 / 100** | all pass | Model decides the order outright; three rival encoders and a logistic fusion measured and rejected. C3 10 to 13. |
+| 12 | 84 / 100 | all pass | No work regressed. C3 and C7 both fell on scorer interpolation and a contended timing run; the same code scored 88 the round before. |
+| 13 | **89 / 100** | all pass | Acronym expansion restored to the semantic path -- "DFT" was returning newsletters. C7 to full marks on an uncontended bench. |
 
-Nine rounds against a six-round budget, extended twice as the target moved.
+**On the spread.** Rounds 10 to 13 range from 84 to 89 on an artifact that only
+improved. The cause is this document: several criteria put their anchors far apart
+(C3 jumps 10 to 15, C7 jumps 5 to 7) while the scoring rules invite interpolation
+between them, so two careful scorers reading identical evidence land two or three
+points apart. The same defect appeared in rounds 4 and 5 and was fixed there by
+naming the statistic. It is worth reading any single total here as plus or minus
+three, and the trend rather than the point as the signal.
 
-**Where the remaining points are, stated accurately.** Ten of them sit behind C3.
-An earlier version of this note said that threshold was unreachable by anything
-shippable; that was wrong and is corrected in the criterion itself. A bundled
-local model -- which these constraints permit, and which is not the same as a
-hosted one -- reaches nDCG@20 0.638 against the 0.433 that ships. What stops it is
-cost rather than capability: 27.7 ms per document against a performance gate that
-allows 3x, and a package growing from 0.37 MB to roughly 28 MB. It also buys
-relevance only, since crowding in that same space separates disruptive from
-derivative research at chance.
+Thirteen rounds against a six-round budget, extended as the target moved.
 
-The other nine sit in C1 (needs AUC 0.70, at 0.654) and C5 (needs corpus drift
+**Where the remaining points are.** The bundled model was built, not just
+measured: relevance went 0.433 to 0.640 and C3 from 5 points to 13. The last two
+there need nDCG@20 0.70, and 0.64 is the measured ceiling of every encoder tried.
+
+The other nine sit in C1 (needs AUC 0.70 against derivative research; 0.654 ships,
+and a logistic fusion fitted directly against that criterion reaches only 0.691
+before the calibration steps take it back to 0.665) and C5 (needs corpus drift
 under 5 points, at 6.8 after four attempted fixes each of which made it worse).
+
+Both are ceilings that were measured rather than assumed, which is the difference
+between a plateau and a stopping point.
 
 See [algorithm-rounds.md](algorithm-rounds.md).
