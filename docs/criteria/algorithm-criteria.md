@@ -353,10 +353,21 @@ Thirteen rounds against a six-round budget, extended as the target moved.
 measured: relevance went 0.433 to 0.640 and C3 from 5 points to 13. The last two
 there need nDCG@20 0.70, and 0.64 is the measured ceiling of every encoder tried.
 
-The other nine sit in C1 (needs AUC 0.70 against derivative research; 0.654 ships,
-and a logistic fusion fitted directly against that criterion reaches only 0.691
-before the calibration steps take it back to 0.665) and C5 (needs corpus drift
-under 5 points, at 6.8 after four attempted fixes each of which made it worse).
+The other nine sit in C1 and C5, and both were audited rather than abandoned.
+
+**C1** needs AUC 0.70 against derivative research; 0.654 ships. The obvious
+suspicion is that calibration destroys separation the signals had -- it does not.
+Measured stage by stage (`eval/experiments/auc-cost.mjs`), the fused signal is
+already only 0.661, the cohort re-rank *raises* it to 0.667, the consolidation
+penalty is neutral, and the final spread costs 0.007. There is no lost accuracy to
+recover downstream: the fused signal is the ceiling. A logistic fitted directly
+against the separation reaches 0.691 on the raw fusion, and three candidate
+signals that looked strong alone (reference popularity, team juniority, semantic
+crowding) each made the model worse when added.
+
+**C5** needs corpus drift under 5 points, at 6.8 after five attempted fixes each
+of which made it worse. Every one removed a piece of corpus-relativity, and
+corpus-relativity is what the accuracy is built on.
 
 Both are ceilings that were measured rather than assumed, which is the difference
 between a plateau and a stopping point.
