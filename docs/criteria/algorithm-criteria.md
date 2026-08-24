@@ -312,8 +312,22 @@ marks on C1 or C3 for the unmodified code is miscalibrated.
 | 5 | 77 / 100 | all pass | C2 restored to 14 by naming the statistic; C6 fell 8 to 6 on another wording error of mine (the criterion said scores must stay inside 1-100, while the code, the docs and `clamp` all use 0-100 and a paper with no identifiable authors legitimately scores 0). |
 | 6 | 79 / 100 | all pass | C6 restored. Learned reranker shipped; memory measured in isolated processes for the first time. |
 | 7 | **81 / 100** | all pass | Memory benchmark made reproducible (isolated processes, three runs, bounded heap, medians): 1.11x rather than the 2.3x a contaminated single run had reported. C7 to full marks. |
+| 8 | 81 / 100 | all pass | Four attacks on corpus stability and two new signal families, all measured and all reverted. No score change; the negative results are the output. |
+| 9 | **81 / 100** | all pass | Bundled-model question settled by measurement rather than assertion. No score change: the finding is recorded, not implemented. |
 
-Seven rounds against a six-round budget, extended once when the target moved.
-Eight of the nine remaining points sit behind C3, whose threshold is reachable --
-an LLM clears it -- but not by anything that can ship under a no-hosted-model
-constraint. See [algorithm-rounds.md](algorithm-rounds.md).
+Nine rounds against a six-round budget, extended twice as the target moved.
+
+**Where the remaining points are, stated accurately.** Ten of them sit behind C3.
+An earlier version of this note said that threshold was unreachable by anything
+shippable; that was wrong and is corrected in the criterion itself. A bundled
+local model -- which these constraints permit, and which is not the same as a
+hosted one -- reaches nDCG@20 0.638 against the 0.433 that ships. What stops it is
+cost rather than capability: 27.7 ms per document against a performance gate that
+allows 3x, and a package growing from 0.37 MB to roughly 28 MB. It also buys
+relevance only, since crowding in that same space separates disruptive from
+derivative research at chance.
+
+The other nine sit in C1 (needs AUC 0.70, at 0.654) and C5 (needs corpus drift
+under 5 points, at 6.8 after four attempted fixes each of which made it worse).
+
+See [algorithm-rounds.md](algorithm-rounds.md).
