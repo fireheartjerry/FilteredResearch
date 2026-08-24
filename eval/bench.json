@@ -1,22 +1,53 @@
 {
-  "generatedAt": "2026-08-24T04:04:34.481Z",
+  "generatedAt": "2026-08-24T04:33:41.382Z",
   "candidates": 10000,
   "peers": 3200,
   "isolatedProcesses": true,
+  "repeats": 3,
+  "statistic": "median",
+  "heapCapMb": 512,
   "results": [
     {
       "name": "v1.0.1 baseline",
-      "wallClockMs": 11553,
-      "peakRssMb": 273,
+      "wallClockMs": 13316,
+      "peakRssMb": 265,
+      "runs": [
+        {
+          "wallClockMs": 16076,
+          "peakRssMb": 265
+        },
+        {
+          "wallClockMs": 13316,
+          "peakRssMb": 265
+        },
+        {
+          "wallClockMs": 12475,
+          "peakRssMb": 266
+        }
+      ],
       "scored": 10000
     },
     {
       "name": "current",
-      "wallClockMs": 12203,
-      "peakRssMb": 427,
+      "wallClockMs": 15065,
+      "peakRssMb": 294,
+      "runs": [
+        {
+          "wallClockMs": 15065,
+          "peakRssMb": 295
+        },
+        {
+          "wallClockMs": 15422,
+          "peakRssMb": 294
+        },
+        {
+          "wallClockMs": 14333,
+          "peakRssMb": 290
+        }
+      ],
       "scored": 10000
     }
   ],
-  "ratio": 1.056,
-  "memoryRatio": 1.564
+  "ratio": 1.131,
+  "memoryRatio": 1.109
 }

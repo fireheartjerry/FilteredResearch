@@ -81,10 +81,16 @@ const STRUCTURAL_CONSOLIDATION_WEIGHT = 34;
 // Consolidation detected from shape alone -- no keyword list, no document-type
 // field. Logistic coefficients fitted on the tuning split against OpenAlex's own
 // `type: review` flag (eval/experiments/consolidation-fit.mjs), operating on
-// features rank-normalised inside the batch. Held-out separation is AUC 0.690,
-// against 0.717 on the data it was fitted to, so it is reading the structure of
+// features rank-normalised inside the batch. Held-out separation is AUC 0.694,
+// against 0.717 on the data it was fitted to, so it is reading the shape of
 // consolidation work rather than memorising this corpus. Regenerate with
 // `node eval/experiments/consolidation-fit.mjs`.
+//
+// Dropping the text-derived features (crowding, genericness, centrality) was
+// tried, on the theory that they are the route by which a score drifts when
+// unrelated work enters the index. Held-out review detection fell to 0.674 and
+// corpus stability got *worse*, not better (6.8 to 7.5 points), so the theory was
+// wrong and the fuller model stands.
 //
 // The document-type field is deliberately NOT used as an input. It is what the
 // benchmark defines the negative class with, so feeding it back in would make

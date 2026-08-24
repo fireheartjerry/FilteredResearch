@@ -10,8 +10,13 @@ const byId = new Map(scored.map((w) => [w.id, w]));
 const tune = corpus.rawCandidates.filter((w) => w.split === "tune" && byId.has(w.id));
 const test = corpus.rawCandidates.filter((w) => w.split === "test" && byId.has(w.id));
 
-const FEATURES = ["referenceCount", "emergentDensity", "centrality", "teamSize", "topicConcentration",
+// FR_FIT_FEATURES=structural drops the text-derived features. They are the ones
+// that depend on the whole index rather than on the paper, and they are why a
+// score moves when unrelated papers are added to the corpus.
+const ALL = ["referenceCount", "emergentDensity", "centrality", "teamSize", "topicConcentration",
   "canonShare", "unfamiliarReferenceFraction", "crowding", "coupledPeerFraction", "genericness"];
+const TEXT_DERIVED = new Set(["crowding", "genericness", "centrality"]);
+const FEATURES = process.env.FR_FIT_FEATURES === "structural" ? ALL.filter((f) => !TEXT_DERIVED.has(f)) : ALL;
 
 function featuresOf(w) {
   const e = byId.get(w.id).noveltyEvidence;

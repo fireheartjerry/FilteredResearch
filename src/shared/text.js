@@ -88,7 +88,7 @@ export function buildLexicon(documents, options = {}) {
   for (const terms of documents) {
     for (const term of new Set(terms)) documentFrequency.set(term, (documentFrequency.get(term) || 0) + 1);
   }
-  return lexiconFrom(documentFrequency, documents.length, options);
+  return lexiconFrom(documentFrequency, documents.length, { retainFrequencies: true, ...options });
 }
 
 // Same lexicon, built from frequencies that were accumulated in a streaming pass.
@@ -122,7 +122,17 @@ export function lexiconFrom(documentFrequency, documentCount, options = {}) {
     ids.set(term, idfById.length);
     idfById.push(value);
   }
-  return { documentFrequency, idf, ids, idfById, documentCount: total };
+  // The raw frequency table is a quarter of a million string-keyed entries and
+  // nothing in the scoring path reads it once the IDF has been derived, so it is
+  // dropped unless a caller asks to keep it. Holding it cost roughly thirty
+  // megabytes for the whole length of a pass.
+  return {
+    documentFrequency: options.retainFrequencies ? documentFrequency : null,
+    idf,
+    ids,
+    idfById,
+    documentCount: total,
+  };
 }
 
 // BM25 term weights for one document, restricted to the lexicon and returned as

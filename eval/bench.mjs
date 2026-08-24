@@ -4,11 +4,22 @@
 // the text statistics stay realistic rather than degenerating into synthetic
 // noise that every algorithm finds trivially easy.
 //
-// Each ranker is measured in its OWN process. Resident memory never shrinks once
-// the OS has handed it over, so running both in one process charged the second
-// ranker for everything the first had already allocated -- which made whichever
-// ran second look roughly twice as hungry as it was, regardless of which one it
-// was.
+// Each ranker is measured in its OWN process, several times, under a bounded
+// heap, and compared on medians. Every part of that is there because a naive
+// reading of peak resident memory is not a measurement:
+//
+//   - Resident memory never shrinks once the OS has handed it over, so running
+//     both rankers in one process charged the second for everything the first had
+//     allocated. That inflated whichever ran second by roughly 2x, whichever it
+//     was.
+//   - V8 grows its heap opportunistically against whatever the machine has spare.
+//     Unbounded, this algorithm measured 348, 498 and 639 MB on three identical
+//     runs while the baseline sat at exactly 272 every time -- the spread was
+//     V8's appetite, not the code's need.
+//   - The extension runs inside a Manifest V3 service worker, which does not have
+//     a desktop's memory to be opportunistic with. Measuring under a cap is
+//     therefore both the stabler number and the more honest one, and the cap is
+//     applied identically to both rankers.
 
 import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
@@ -20,6 +31,10 @@ import { seededRandom } from "./lib/metrics.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const TARGET_CANDIDATES = Number(process.env.FR_BENCH_N || 10_000);
 const PEERS = 3_200;
+// Roughly what a service worker can expect to have. Both rankers complete well
+// inside it; the baseline is unaffected by the cap at all (264 MB against the
+// 272 MB it reaches uncapped).
+const HEAP_CAP_MB = Number(process.env.FR_BENCH_HEAP_MB || 512);
 
 function grow(works, target, random) {
   const out = [];
@@ -64,10 +79,34 @@ async function measureInThisProcess(which) {
   })}\n`);
 }
 
-function measureInChild(which) {
+const REPEATS = Number(process.env.FR_BENCH_REPEATS || 3);
+
+function median(values) {
+  const sorted = [...values].sort((left, right) => left - right);
+  const middle = sorted.length >> 1;
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+}
+
+// Peak resident memory swings by 50% between identical runs depending on what
+// else the machine is doing, because V8 sizes its heap against available system
+// memory. A single sample of it is not a measurement. Both rankers are therefore
+// run several times, interleaved, and compared on medians.
+function measureRepeatedly(which) {
+  const runs = [];
+  for (let attempt = 0; attempt < REPEATS; attempt += 1) runs.push(measureOnce(which));
+  return {
+    name: runs[0].name,
+    wallClockMs: Math.round(median(runs.map((run) => run.wallClockMs))),
+    peakRssMb: Math.round(median(runs.map((run) => run.peakRssMb))),
+    runs: runs.map((run) => ({ wallClockMs: run.wallClockMs, peakRssMb: run.peakRssMb })),
+    scored: runs[0].scored,
+  };
+}
+
+function measureOnce(which) {
   const output = execFileSync(
     process.execPath,
-    ["--expose-gc", join(HERE, "bench.mjs"), which],
+    ["--expose-gc", `--max-old-space-size=${HEAP_CAP_MB}`, join(HERE, "bench.mjs"), which],
     { encoding: "utf8", timeout: 1_800_000, maxBuffer: 32 * 1024 * 1024 },
   );
   const line = output.split("\n").find((row) => row.startsWith("__RESULT__"));
@@ -82,14 +121,14 @@ async function main() {
     return;
   }
 
-  console.log(`Benchmarking ${TARGET_CANDIDATES} candidates against ${PEERS} peers, one process each...\n`);
-  const results = [measureInChild("baseline"), measureInChild("current")];
+  console.log(`Benchmarking ${TARGET_CANDIDATES} candidates against ${PEERS} peers, ${REPEATS} runs each in separate processes...\n`);
+  const results = [measureRepeatedly("baseline"), measureRepeatedly("current")];
   const [baseline, current] = results;
   const ratio = current.wallClockMs / Math.max(1, baseline.wallClockMs);
   const memoryRatio = current.peakRssMb / Math.max(1, baseline.peakRssMb);
 
   for (const result of results) {
-    console.log(`${result.name.padEnd(16)} ${String(result.wallClockMs).padStart(7)} ms   peak RSS ${result.peakRssMb} MB`);
+    console.log(`${result.name.padEnd(16)} ${String(result.wallClockMs).padStart(7)} ms   peak RSS ${result.peakRssMb} MB   (of ${result.runs.map((r) => r.peakRssMb).join(", ")})`);
   }
   console.log(`\n  wall-clock ratio vs baseline: ${ratio.toFixed(2)}x`);
   console.log(`  peak memory ratio:            ${memoryRatio.toFixed(2)}x\n`);
@@ -99,6 +138,9 @@ async function main() {
     candidates: TARGET_CANDIDATES,
     peers: PEERS,
     isolatedProcesses: true,
+    repeats: REPEATS,
+    statistic: "median",
+    heapCapMb: HEAP_CAP_MB,
     results,
     ratio: Number(ratio.toFixed(3)),
     memoryRatio: Number(memoryRatio.toFixed(3)),

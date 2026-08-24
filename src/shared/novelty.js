@@ -213,7 +213,7 @@ export function buildNoveltyModel(candidates, peers, options = {}) {
 
   // Pass one counts vocabulary. Term arrays are built, counted and dropped one
   // document at a time so the whole corpus is never resident as token lists.
-  const documentFrequency = new Map();
+  let documentFrequency = new Map();
   const historicalDocumentFrequency = new Map();
   const currentDocumentFrequency = new Map();
   // Vocabulary history is pooled across the whole index rather than kept per
@@ -236,6 +236,8 @@ export function buildNoveltyModel(candidates, peers, options = {}) {
     }
   }
   const lexicon = lexiconFrom(documentFrequency, allWorks.length);
+  // Counted, converted to IDF, no longer needed.
+  documentFrequency = null;
   const averageLength = totalLength / Math.max(1, allWorks.length);
 
   // The semantic space needs token order, so it reads a bounded sample of the
