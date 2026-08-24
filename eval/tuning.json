@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-24T02:54:47.212Z",
+  "generatedAt": "2026-08-24T16:14:34.658Z",
   "split": "tune",
   "papers": 919,
   "labelled": 400,
@@ -21,6 +21,18 @@
       "weight": 0.142,
       "invert": true,
       "label": "not built on the standard canon"
+    },
+    {
+      "key": "meanReferencePopularity",
+      "weight": 0.1,
+      "invert": true,
+      "label": "sources are not the field's most-cited work"
+    },
+    {
+      "key": "maxReferencePopularity",
+      "weight": 0.06,
+      "invert": true,
+      "label": "no landmark paper anchors its bibliography"
     },
     {
       "key": "pairSupport",
@@ -57,12 +69,6 @@
       "weight": 0.036,
       "invert": true,
       "label": "not a generic restatement of the field"
-    },
-    {
-      "key": "teamJuniority",
-      "weight": 0.1,
-      "invert": false,
-      "label": "team includes an early-career researcher"
     },
     {
       "key": "topicConcentration",
@@ -121,6 +127,22 @@
       "reviewGap": -0.00776
     },
     {
+      "signal": "meanReferencePopularity",
+      "invert": true,
+      "n": 400,
+      "spearman": 0.1439,
+      "auc": 0.573,
+      "reviewGap": -0.00998
+    },
+    {
+      "signal": "maxReferencePopularity",
+      "invert": true,
+      "n": 400,
+      "spearman": 0.1026,
+      "auc": 0.5825,
+      "reviewGap": 0.45797
+    },
+    {
       "signal": "unfamiliarReferenceFraction",
       "invert": false,
       "n": 400,
@@ -166,22 +188,23 @@
     "ndcg": 0.3377
   },
   "fittedWeights": {
-    "referenceCount": 0.103,
-    "emergentDensity": 0.178,
-    "canonShare": 0.128,
-    "pairSupport": 0.125,
-    "unfamiliarReferenceFraction": 0.128,
-    "unseenPairFraction": 0.103,
-    "strongestCoupling": 0.065,
-    "coupledPeerFraction": 0.103,
-    "genericness": 0,
-    "teamJuniority": 0.063,
-    "topicConcentration": 0.006
+    "referenceCount": 0.206,
+    "emergentDensity": 0.206,
+    "canonShare": 0.062,
+    "meanReferencePopularity": 0.05,
+    "maxReferencePopularity": 0.042,
+    "pairSupport": 0.049,
+    "unfamiliarReferenceFraction": 0.05,
+    "unseenPairFraction": 0.173,
+    "strongestCoupling": 0.062,
+    "coupledPeerFraction": 0.062,
+    "genericness": 0.033,
+    "topicConcentration": 0.004
   },
   "fittedObjective": {
-    "ndcg": 0.4397,
-    "auc": 0.6503,
-    "objective": 0.545
+    "ndcg": 0.4786,
+    "auc": 0.7028,
+    "objective": 0.5907
   },
   "note": "Fitted on the tuning split only. Reported metrics always come from the disjoint test split."
 }

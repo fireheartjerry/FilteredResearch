@@ -31,6 +31,8 @@ const SIGNALS = [
   ["unseenPairFraction", false],
   ["pairSupport", true],
   ["canonShare", true],
+  ["meanReferencePopularity", true],
+  ["maxReferencePopularity", true],
   ["unfamiliarReferenceFraction", false],
   ["referenceCount", true],
   ["strongestCoupling", true],

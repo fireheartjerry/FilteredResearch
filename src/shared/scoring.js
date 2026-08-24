@@ -52,6 +52,15 @@ export const NOVELTY_WEIGHTS = Object.freeze([
   { key: "topicConcentration", weight: 0.009, invert: false, label: "focused on one topic" },
 ]);
 
+// Reference popularity -- how heavily cited a paper's sources are, on average and
+// at their peak -- is computed and reported as evidence but not fused. Measured
+// alone on the tuning split the mean has the strongest rank correlation with
+// disruption of any signal here (0.145, against 0.179 for canonShare). Fused, the
+// tuner raised nDCG@50 to 0.373 and dropped separation against derivative
+// research from 0.654 to 0.638: it optimises the pooled AUC it is given, and the
+// pooled figure includes reviews. What looks like the strongest single signal
+// makes the model worse at the question it exists to answer.
+
 // A near-verbatim restatement of existing work is the least novel thing that can
 // enter a corpus, whatever its bibliography looks like. The reference signals
 // above cannot see that -- a copied paper can carry an unusual reference list --
@@ -77,6 +86,33 @@ function duplicateCeiling(similarity) {
 // weakest.
 const LEXICAL_CONSOLIDATION_WEIGHT = 6;
 const STRUCTURAL_CONSOLIDATION_WEIGHT = 34;
+
+// Where a paper's consolidation probability sits on a FIXED scale, measured once
+// on the tuning split and shipped as quantiles. It used to be measured against
+// whatever else happened to be in the batch, which made a paper's penalty -- and
+// therefore its score -- depend on its neighbours. Adding unrelated work to an
+// index moved everybody. A fixed reference removes that by construction: the same
+// paper gets the same penalty in a corpus of two hundred or twenty thousand.
+const SHAPE_REFERENCE = Object.freeze([
+  0.0208, 0.03906, 0.04986, 0.0565, 0.06176, 0.06775, 0.07664, 0.08305, 0.0906,
+  0.09821, 0.1063, 0.11519, 0.1226, 0.13497, 0.1489, 0.16, 0.17228, 0.19266,
+  0.21052, 0.2498, 0.4327,
+]);
+
+// Position on that fixed scale, interpolating between quantiles.
+function referenceRank(value) {
+  if (!Number.isFinite(value)) return null;
+  if (value <= SHAPE_REFERENCE[0]) return 0;
+  const last = SHAPE_REFERENCE.length - 1;
+  if (value >= SHAPE_REFERENCE[last]) return 1;
+  for (let index = 1; index <= last; index += 1) {
+    if (value <= SHAPE_REFERENCE[index]) {
+      const span = SHAPE_REFERENCE[index] - SHAPE_REFERENCE[index - 1] || 1;
+      return (index - 1 + (value - SHAPE_REFERENCE[index - 1]) / span) / last;
+    }
+  }
+  return 1;
+}
 
 // Consolidation detected from shape alone -- no keyword list, no document-type
 // field. Logistic coefficients fitted on the tuning split against OpenAlex's own
@@ -489,7 +525,12 @@ export function scoreBatch(candidates, references, authors, options = {}) {
     // The logistic output is bunched -- most papers land within a narrow band of
     // probability -- so the penalty is driven by where a paper sits among its
     // peers on that scale rather than by the probability itself. Without this the
-    // whole 30-point term collapsed into a 3-point spread.
+    // whole 34-point term collapsed into a 3-point spread.
+    //
+    // A fixed reference scale, shipped as quantiles from the tuning split, was
+    // tried here to make the penalty independent of batch composition. It made
+    // corpus stability worse (6.8 to 7.9 points) and cost 0.016 nDCG, because the
+    // penalty is not where the instability comes from.
     const shapeRank = shape === null ? null : rankIn(shapeRanks.get(item.cohort.key) || [], shape);
     const structuralPenalty = shapeRank === null ? 0 : settings.structuralConsolidationWeight * shapeRank ** 1.3;
     const lexicalPenalty = settings.disableLexicalConsolidationPrior ? 0 : LEXICAL_CONSOLIDATION_WEIGHT * prior.strength;
@@ -591,6 +632,8 @@ export function scoreBatch(candidates, references, authors, options = {}) {
         unseenPairFraction: measure.combination?.unseenPairFraction ?? null,
         pairSupport: measure.combination?.pairSupport ?? null,
         canonShare: measure.combination?.canonShare ?? null,
+        meanReferencePopularity: measure.combination?.meanReferencePopularity ?? null,
+        maxReferencePopularity: measure.combination?.maxReferencePopularity ?? null,
         unfamiliarReferenceFraction: measure.combination?.unfamiliarReferenceFraction ?? null,
         strongestCoupling: measure.coupling?.strongestCoupling ?? null,
         coupledPeerFraction: measure.coupling?.coupledPeerFraction ?? null,

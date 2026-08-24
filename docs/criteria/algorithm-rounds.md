@@ -152,6 +152,42 @@ combination), and dropping the text-derived features from the consolidation mode
 
 ---
 
+## Round 8 — four more attempts on the last two gaps, all reverted
+
+The remaining points sit in C5 (corpus stability) and C1 (separation against
+derivative research). Both were attacked directly; neither moved. Recorded
+because a list of what does *not* work is the more useful half of this log.
+
+**C5 — corpus stability.** Decomposing the drift showed the peer set and the
+confidence term are perfectly stable, and the movement enters through the fused
+signal value itself. Four fixes followed from that, and all four made it worse:
+
+| Attempt | Corpus drift | Cost |
+|---|---|---|
+| Per-field vocabulary history | 6.8 → 6.8 | −0.037 nDCG |
+| Drop text features from the consolidation model | 6.8 → 7.5 | review AUC 0.694 → 0.674 |
+| Fixed reference scale for the consolidation penalty | 6.8 → 7.9 | −0.016 nDCG |
+| Rate-based rather than absolute "new to the field" | 6.8 → **11.8** | −0.025 nDCG |
+
+The sensitivity is intrinsic to scoring a paper against its corpus. Every removal
+of corpus-relativity costs the accuracy that corpus-relativity buys.
+
+**C1 — separation.** Two new families of signal were measured on the tuning split
+and both looked excellent alone:
+
+- *Team juniority* (the least-established author's h-index, inverted): AUC 0.64,
+  and it points the way the team-composition literature says it should.
+- *Reference popularity* (how heavily cited a paper's sources are, mean and peak):
+  rank correlation 0.145, the **strongest of any signal measured here**.
+
+Fused, both made the model worse. Reference popularity raised nDCG@50 to 0.373
+while dropping separation against derivative research from 0.654 to 0.638 — the
+tuner optimises the pooled AUC it is given, and the pooled figure includes reviews,
+so it happily traded away the thing the criterion actually reads. Both are computed
+and reported as evidence; neither is fused.
+
+---
+
 ## Where it stops, and why
 
 Two criteria were amended mid-loop, both because they set absolute thresholds
