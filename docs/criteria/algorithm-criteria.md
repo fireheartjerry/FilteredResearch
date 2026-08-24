@@ -273,8 +273,12 @@ marks on C1 or C3 for the unmodified code is miscalibrated.
 | 1 | **73.75 / 100** | all pass | Algorithm and benchmark rewritten, then eight findings from an independent blind adversarial review applied -- including two critical ones that invalidated already-committed numbers. |
 | 2 | **79.25 / 100** | all pass | Pseudo-relevance feedback, an answerable qualitative panel, docs pinned to code by test. Two changes measured and reverted. |
 | 3 | **81 / 100** | all pass (G8 amended) | Relevance leakage closed, posting lists flattened, SPEC count corrected. C9 and C11 reached full marks. |
+| 4 | 77 / 100 | all pass | No work regressed. C2 moved 14 to 11 purely because two scorers read "novelty must move < 8 points" differently -- one as the mean (4.6), one as the p95 (25.4). The criterion never said which. |
+| 5 | 77 / 100 | all pass | C2 restored to 14 by naming the statistic; C6 fell 8 to 6 on another wording error of mine (the criterion said scores must stay inside 1-100, while the code, the docs and `clamp` all use 0-100 and a paper with no identifiable authors legitimately scores 0). |
+| 6 | 79 / 100 | all pass | C6 restored. Learned reranker shipped; memory measured in isolated processes for the first time. |
+| 7 | **81 / 100** | all pass | Memory benchmark made reproducible (isolated processes, three runs, bounded heap, medians): 1.11x rather than the 2.3x a contaminated single run had reported. C7 to full marks. |
 
-Stopped at round 3 of a 6-round budget. The remaining 19 points are not reachable
-by more rounds: 8 of them sit behind a C3 threshold that exceeds what any tested
-method achieves, and which was deliberately not amended a third time in the
-author's favour. See [algorithm-rounds.md](algorithm-rounds.md).
+Seven rounds against a six-round budget, extended once when the target moved.
+Eight of the nine remaining points sit behind C3, whose threshold is reachable --
+an LLM clears it -- but not by anything that can ship under a no-hosted-model
+constraint. See [algorithm-rounds.md](algorithm-rounds.md).

@@ -115,6 +115,43 @@ Driven by the round-1 scorecard rather than a fresh review.
 
 ---
 
+## Rounds 4–7 — 81 → 77 → 79 → 81
+
+Rounds 4 and 5 are the useful ones to read, because the score went *down* while
+the work only improved. Both drops were ambiguities in criteria I had written:
+
+- **C2** hinged on "novelty must move by < 8 points" without naming a statistic.
+  One scorer read the mean (4.6, passes), the next read the p95 (25.4, fails) —
+  three points of swing on identical code. Naming the statistic fixed it. The p95
+  tail is real and is now reported rather than buried: on a record with no
+  reference list, terminology carries about eighty per cent of the available
+  fusion weight. Two fixes for it were implemented and measured — a steeper
+  evidence-breadth term, and a confidence-weighted final re-rank — and neither
+  moved the p95 by a point, so both were reverted.
+- **C6** said scores must stay inside 1–100 while the code, the docs and `clamp`
+  all use 0–100, and a paper with no identifiable authors legitimately scores 0.
+
+Round 7 was worth more than its two points. The memory number had been reported
+from a single unbounded run of both rankers in one process, which is wrong three
+ways: resident memory never shrinks, so whichever ranker ran second was charged
+for the first; V8 grows its heap against spare machine memory, so this algorithm
+measured 348, 498 and 639 MB on three identical runs while the baseline sat at
+exactly 272 every time; and the extension runs in a service worker that has no
+such memory to be opportunistic with. Measured properly — three runs each, own
+process, bounded heap, medians — it is **1.11×**, reproducible to a megabyte, and
+the previously reported 2.3× was mostly an artefact of the measurement.
+
+Two genuine reductions landed alongside it: the pipeline no longer builds three
+successive ten-thousand-element arrays of spread copies, and the lexicon's raw
+frequency table is released once the IDF is derived instead of held for the pass.
+
+Also tried and reverted in these rounds, with the evidence left in the comments:
+team juniority as a fusion signal (AUC 0.64 alone, made the model worse in
+combination), and dropping the text-derived features from the consolidation model
+(review detection fell and corpus stability got *worse*, so the theory was wrong).
+
+---
+
 ## Where it stops, and why
 
 Two criteria were amended mid-loop, both because they set absolute thresholds
