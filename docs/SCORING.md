@@ -19,7 +19,7 @@ generation paper in the index.
 
 ## Novelty
 
-Eleven signals, each turned into a rank inside the paper's own field cohort before
+Ten signals, each turned into a rank inside the paper's own field cohort before
 being combined, so no signal can dominate through having a wider range and so a
 score means the same thing in materials science as in machine learning.
 
@@ -30,17 +30,21 @@ imputed to the middle.
 
 | Weight | Signal | What it asks |
 |---:|---|---|
-| 0.24 | `pairSupport` | How often the field already cites this paper's sources together |
-| 0.20 | `unseenPairFraction` | Share of its source pairings nobody has made before |
-| 0.17 | `canonShare` | How much of its bibliography is the field's standard canon |
-| 0.11 | `referenceCount` | Breadth of citation — surveys cite far more |
-| 0.08 | `unfamiliarReferenceFraction` | Share of sources this field never cites |
-| 0.07 | `emergentDensity` | Vocabulary the field did not have before |
-| 0.04 | `strongestCoupling` | Strongest bibliography overlap with an existing paper |
-| 0.04 | `genericness` | How much of the paper is just the field's average |
-| 0.02 | `coupledPeerFraction` | How many papers share its sources |
-| 0.02 | `crowding` | Distance from the nearest existing work |
-| 0.01 | `topicConcentration` | Whether it sits on one topic or spreads across many |
+| 0.232 | `referenceCount` | Breadth of citation — surveys cite far more |
+| 0.196 | `emergentDensity` | Vocabulary the field did not have before |
+| 0.142 | `canonShare` | How much of its bibliography is the field's standard canon |
+| 0.108 | `pairSupport` | How often the field already cites its sources together |
+| 0.088 | `unfamiliarReferenceFraction` | Share of sources this field never cites |
+| 0.075 | `unseenPairFraction` | Share of its source pairings nobody has made before |
+| 0.062 | `strongestCoupling` | Strongest bibliography overlap with an existing paper |
+| 0.053 | `coupledPeerFraction` | How many papers share its sources |
+| 0.036 | `genericness` | How much of the paper is just the field's average |
+| 0.009 | `topicConcentration` | Whether it sits on one topic or spreads across many |
+
+Text crowding is deliberately absent from this table: measured against real
+outcomes its rank correlation with disruption is negative, so the shrink rule
+excludes it. It still catches near-verbatim restatements, through the ceiling
+described below rather than as a term in the sum.
 
 Weights are fitted by coordinate ascent on a tuning split and then shrunk toward a
 uniform prior over every positively-correlated signal. The reported metrics come
@@ -124,7 +128,7 @@ makes no claim about the paper.
 ## Relevance
 
 Interest phrases now rank results, which is what `SPEC.md` always said they did.
-BM25 over title and abstract, with title terms weighted 2.6×, a proximity bonus for
+BM25 over title and abstract, with title terms weighted 1.2×, a proximity bonus for
 query words that stay together, and a coverage term so a paper matching every query
 term beats one matching a single term repeatedly.
 
@@ -133,8 +137,13 @@ type (`RAG` → retrieval augmented generation, and back), the derived acronym o
 multi-word query, and the nearest terms in the corpus's own semantic space at
 reduced weight.
 
-Measured on held-out topic judgements, nDCG@20 goes from **0.03 to 0.38**, MRR from
-0.04 to 0.68, recall@100 from 0.06 to 0.54.
+Queries are also asked twice: the strongest terms of the best few answers are
+harvested and folded back in at reduced weight (pseudo-relevance feedback), which
+is what lets a phrase find papers that describe the same thing in the field's own
+jargon.
+
+Measured on held-out topic judgements, nDCG@20 goes from **0.03 to 0.42**, MRR from
+0.04 to 0.73, recall@100 from 0.06 to 0.61.
 
 ## Ordering and selectivity
 

@@ -124,14 +124,22 @@ export function buildRelevanceQueries(candidates, { minimumRelevant = 12, maximu
   });
 }
 
-// Six queries a real user would type, kept separate from the topic-derived set
+// Queries a real user would type, kept separate from the topic-derived set
 // because they test phrasing the labels cannot: abbreviations, multi-word
 // concepts, and terms whose expansion differs from their acronym.
+//
+// They must also be answerable from the corpus under test. The first version of
+// this list asked a 2021 corpus for "RAG", "LLM agents" and "sparse autoencoder"
+// -- terminology that did not exist yet, and which matches zero papers in the
+// fixture. A panel of unanswerable queries measures the corpus, not the ranker,
+// and its top-10 lists are noise by construction. The report now prints the
+// number of papers containing each phrase alongside the results, so an empty
+// query can never again be read as a ranking failure.
 export const QUALITATIVE_QUERIES = Object.freeze([
-  "RAG",
-  "LLM agents",
-  "diffusion",
-  "protein folding",
-  "causal inference",
-  "sparse autoencoder",
+  "DFT",                        // acronym -> density functional theory
+  "density functional theory",  // and the reverse direction
+  "MRI",
+  "COVID-19 vaccine",
+  "superconductivity",
+  "thin film deposition",
 ]);

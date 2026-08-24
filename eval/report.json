@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-24T01:43:23.758Z",
+  "generatedAt": "2026-08-24T02:14:13.813Z",
   "split": "test",
   "corpus": {
     "candidates": 2267,
@@ -57,127 +57,139 @@
   },
   "relevance": {
     "queries": 41,
-    "ndcg_at_20": 0.381,
-    "ndcg_at_10": 0.3646,
-    "mrr": 0.677,
-    "recall_at_100": 0.5386,
-    "precision_at_10": 0.2756,
+    "ndcg_at_20": 0.4203,
+    "ndcg_at_10": 0.3905,
+    "mrr": 0.7259,
+    "recall_at_100": 0.6117,
+    "precision_at_10": 0.2976,
     "worst_queries": [
       {
         "query": "Particle physics theoretical and experimental studies",
-        "ndcg_at_20": 0.021
-      },
-      {
-        "query": "Magnetic properties of thin films",
-        "ndcg_at_20": 0.0781
-      },
-      {
-        "query": "Advanced Neural Network Applications",
-        "ndcg_at_20": 0.0841
-      },
-      {
-        "query": "Conducting polymers and applications",
-        "ndcg_at_20": 0.0861
+        "ndcg_at_20": 0.0123
       },
       {
         "query": "Quantum and electron transport phenomena",
-        "ndcg_at_20": 0.0876
+        "ndcg_at_20": 0.0392
+      },
+      {
+        "query": "Spectroscopy and Quantum Chemical Studies",
+        "ndcg_at_20": 0.066
+      },
+      {
+        "query": "Conducting polymers and applications",
+        "ndcg_at_20": 0.0789
+      },
+      {
+        "query": "Magnetic properties of thin films",
+        "ndcg_at_20": 0.0803
       }
     ]
   },
   "qualitative": [
     {
-      "query": "RAG",
+      "query": "DFT",
+      "corpusMatches": 6,
+      "answerable": true,
       "top": [
-        "Systematic Review and Meta-Analysis of Acupuncture for Pain Management in Women Undergoing Transvaginal Oocyte",
-        "EVAGAN: Evasion Generative Adversarial Network for Low Data Regimes",
-        "Unified Model for Paraphrase Generation and Paraphrase Identification",
-        "From Generative Linguistics to Categorial Grammars: Overt Subjects in Control Infinitives",
-        "The Effects of Incorrect Occlusion Cues on the Understanding of Barehanded Referencing in Collaborative Augmen",
-        "Imbalanced data classification based on diverse sample generation and classifier fusion",
-        "Multimodal Interaction Systems Based on Internet of Things and Augmented Reality: A Systematic Literature Revi",
-        "Bootstrapping MDE development from ROS manual code: Part 2—Model generation and leveraging models at runtime",
-        "The Impact of Test Case Generation Methods on the Software Performance: A Review",
-        "Augmented reality applications for K-12 education: A systematic review from the usability and user experience "
+        "Density functional theory calculations for cathode materials of proton-conducting solid oxide fuel cells: A mi",
+        "Inelastic Neutron Scattering Study of Magnetic Exchange Pathways in MnS",
+        "Density functional theory investigation on lattice dynamics, elastic properties and origin of vanished magneti",
+        "Benchmarking Density Functional Approximations for Diamagnetic and Paramagnetic Molecules in Nonuniform Magnet",
+        "Interactions between Sterically Stabilized Nanoparticles: The Effects of Brush Bidispersity and Chain Stiffnes",
+        "Native point defects and their implications for the Dirac point gap at MnBi$_2$Te$_4$(0001)",
+        "Prediction of chemically ordered dual transition metal carbides (MXenes) as high-capacity anode materials for ",
+        "Magnetic crystalline-symmetry-protected axion electrodynamics and field-tunable unpinned Dirac cones in EuIn2A",
+        "Probing the structural, electronic and spectral properties of a NbB20− cluster",
+        "Optical, Electrochemical, and Photoelectrochemical Behavior of Copper Pyrovanadate: A Unified Theoretical and "
       ]
     },
     {
-      "query": "LLM agents",
+      "query": "density functional theory",
+      "corpusMatches": 17,
+      "answerable": true,
       "top": [
-        "Comparison of phosphonate, hydroxypropyl and carboxylate pendants in Fe(III) macrocyclic complexes as MRI cont",
-        "State-of-the-Art Analysis of Adopting AI-based Conversational Agents in Organizations: A Systematic Literature",
-        "A Review of Privacy in Agent Based Meeting Scheduling",
-        "Cytotoxicity of targeted PLGA nanoparticles: a systematic review",
-        "Marrying luminescent Au nanoclusters to TiO 2 for visible-light-driven antibacterial application",
-        "Collaborative intrusion detection networks with multi-hop clustering for internet of things",
-        "On the Critical Role of Conventions in Adaptive Human-AI Collaboration",
-        "Synthesis, Characterization and Antimicrobial Activities of Bio-functionalized Ag and Au Metal Nanoparticles: ",
-        "Anomaly-Based Intrusion Detection/Prevention System using Deep Reinforcement Learning Algorithm",
-        "Profunda femoris mycotic aneurysm as a complication of bacterial endocarditis: a case report and review of the"
+        "Density functional theory calculations for cathode materials of proton-conducting solid oxide fuel cells: A mi",
+        "Inelastic Neutron Scattering Study of Magnetic Exchange Pathways in MnS",
+        "Density functional theory investigation on lattice dynamics, elastic properties and origin of vanished magneti",
+        "Benchmarking Density Functional Approximations for Diamagnetic and Paramagnetic Molecules in Nonuniform Magnet",
+        "Interactions between Sterically Stabilized Nanoparticles: The Effects of Brush Bidispersity and Chain Stiffnes",
+        "Native point defects and their implications for the Dirac point gap at MnBi$_2$Te$_4$(0001)",
+        "Prediction of chemically ordered dual transition metal carbides (MXenes) as high-capacity anode materials for ",
+        "Magnetic crystalline-symmetry-protected axion electrodynamics and field-tunable unpinned Dirac cones in EuIn2A",
+        "Probing the structural, electronic and spectral properties of a NbB20− cluster",
+        "Optical, Electrochemical, and Photoelectrochemical Behavior of Copper Pyrovanadate: A Unified Theoretical and "
       ]
     },
     {
-      "query": "diffusion",
+      "query": "MRI",
+      "corpusMatches": 10,
+      "answerable": true,
       "top": [
-        "Multimodal Nanoscopic Study of Atomic Diffusion and Related Localized Optoelectronic Response of WS2/MoS2 Late",
-        "Study of Electrochemical Behavior, Hydrogen Permeation and Diffusion in Pipeline Steel",
-        "Comprehensive Study of Lithium Adsorption and Diffusion on Janus Mo/WXY (X, Y = S, Se, Te) Using First-Princip",
-        "Chitosan-covered liposomes as a promising drug transporter: nanoscale investigations",
-        "Elucidating the Kinetic Root of the Evolution of the Oriented Nanoporous Metal from Reduction-Induced Decompos",
-        "An ultrafast vibrational study of dynamical heterogeneity in the protic ionic liquid ethyl-ammonium nitrate. I",
-        "Influence Maximization based on a Non-dominated Sorting Genetic Algorithm",
-        "T-Growth Stochastic Model: Simulation and Inference via Metaheuristic Algorithms",
-        "A highly controllable doping technique via interdiffusion between epitaxial germanium layers and GaAs",
-        "Large-Area Bernal-Stacked Bilayer Graphene Film on a Uniformly Rough Cu Surface via Chemical Vapor Deposition"
+        "Laser-detected magnetic resonance induced by radio-frequency two-photon processes",
+        "Incidental Brain MRI Findings in Children: A Systematic Review and Meta-Analysis",
+        "Is hyperpolarised gas magnetic resonance imaging a valid and reliable tool to detect lung health in cystic fib",
+        "STUDY OF NUCLEAR MAGNETIC RESONANCE SPECTROSCOPY WITH APPLICATIONS: A COMPREHENSIVE REVIEW",
+        "Investigation of hydration and setting process in nanosilica-cement blended pastes: In situ characterization u",
+        "Trimodality PET/CT/MRI and Radiotherapy: A Mini-Review",
+        "Frequency of Anatomical Variations and Congenital Anomalies in Pancreatobiliary Tract through Magnetic Resonan",
+        "Case of Steroid-Sensitive Neuronopathy as a Differential Diagnosis to Dissociative Paralysis in Conversion Dis",
+        "Comparison of prostate imaging reporting and data system v2.1 and 2 in transition and peripheral zones: evalua",
+        "Potential Biomarkers in Diagnosis, Prognosis and Prediction of Treatment Response in Malignant Glioma"
       ]
     },
     {
-      "query": "protein folding",
+      "query": "COVID-19 vaccine",
+      "corpusMatches": 1,
+      "answerable": false,
       "top": [
-        "Anti-biofouling assembly strategies for protein & cell repellent surfaces: a mini-review",
-        "Nanotheranostic Application of Fluorescent Protein-Gold Nanocluster Hybrid Materials: A Mini-review",
-        "Protein hydration shell formation: Dynamics of water in biological systems exhibiting nanoscopic cavities",
-        "Solvent-induced conformational tuning of lysozyme protein adlayers on silica surfaces: A QCM-D and LSPR study",
-        "Assessment of C-reactive Protein, Lipid Profile and Body Mass Index in Type2 Diabetes Mellitus in Sudanese Pat",
-        "A single‐domain small protein Med‐ORF10 regulates the production of antitumour agent medermycin in Streptomyce",
-        "Accuracy of Liver-Type Fatty Acid-Binding Protein in Predicting Acute Kidney Injury: A Meta-Analysis",
-        "Ultramicronized Palmitoylethanolamide Inhibits NLRP3 Inflammasome Expression and Pro-Inflammatory Response Act",
-        "Influence of Plant and Animal Proteins on Inflammation Markers among Adults with Chronic Kidney Disease: A Sys",
-        "A meta-analysis of the activity, stability, and mutational characteristics of temperature-adapted enzymes"
+        "FDA-authorized COVID-19 vaccines are effective per real-world evidence synthesized across a multi-state health",
+        "Factors associated with deaths due to COVID-19 versus other causes: population-based cohort analysis of UK pri",
+        "Vaccination history for diphtheria and tetanus is associated with less severe COVID-19",
+        "Unravelling the early warning capability of wastewater surveillance for COVID-19: A temporal study on SARS-CoV",
+        "The Alteration of Clinical and Laboratory Signs and Symptoms of COVID-19 in Re-infection: A Case Report",
+        "COVID-19 clinical phenotypes and short-term outcomes: differences between the first and the second wave of pan",
+        "Factors associated with poor outcomes in pneumonia patients during the COVID-19 pandemics",
+        "Tocilizumab as treatment for COVID-19: A systematic review and meta-analysis",
+        "Incidence Rate of COVID-19 Infection in Hemoglobinopathies: A Systematic Review and Meta-analysis",
+        "Prone Positioning Is Safe and May Reduce the Rate of Intubation in Selected COVID-19 Patients Receiving High-F"
       ]
     },
     {
-      "query": "causal inference",
+      "query": "superconductivity",
+      "corpusMatches": 3,
+      "answerable": false,
       "top": [
-        "Causal Inference Theory with Information Dependency Models",
-        "Integrated ARM big.Little-Mali Pipeline for High-Throughput CNN Inference",
-        "Cost Volume Pyramid Based Depth Inference for Multi-View Stereo",
-        "AT2017gfo: Bayesian inference and model selection of multicomponent kilonovae and constraints on the neutron s",
-        "T-Growth Stochastic Model: Simulation and Inference via Metaheuristic Algorithms",
-        "Unsupervised Discovery of Object Radiance Fields",
-        "Regret-Optimal Filtering",
-        "KOHESI DAN KOHERENSI DALAM NOVEL KKN DI DESA PENARI KARYA SIMPLEMAN DAN IMPLIKASINYA TERHADAP PEMBELAJARAN BAH",
-        "InstanceRefer: Cooperative Holistic Understanding for Visual Grounding on Point Clouds through Instance Multi-",
-        "Relativistic viscous effects on the primordial gravitational waves spectrum"
+        "Competition between charge-density-wave and superconductivity in the kagome metal RbV3Sb5",
+        "InSbAs Two-Dimensional Electron Gases as a Platform for Topological Superconductivity",
+        "Theory of unconventional superconductivity in nickelate-based materials*",
+        "Giant demagnetization effects induced by superconducting films",
+        "Constructing synthetic materials with superconducting quantum circuits",
+        "Crossover between short- and long-range proximity effects in superconductor/ferromagnet/superconductor junctio",
+        "First-principles study of electronic structure , magnetic and optical properties of Ti, V, Co and Ni doped two",
+        "Surface Energy upon the Martensitic Phase Transition in Microsized Samples of Ni–Mn–Ga–Cu Heusler Alloy",
+        "Field-free magnetization switching induced by the unconventional spin–orbit torque from WTe2",
+        "Finding and downloading NI 43-101 technical reports from SEDAR v1"
       ]
     },
     {
-      "query": "sparse autoencoder",
+      "query": "thin film deposition",
+      "corpusMatches": 0,
+      "answerable": false,
       "top": [
-        "Intelligent Optimization of Latent Fingerprint Image Segmentation using Stacked Convolutional Autoencoder",
-        "A Design Method of Sparse Array with High Degrees of Freedom Based on Fourth-Order Cumulants",
-        "Sparse relation prediction based on hypergraph neural networks in online social networks",
-        "Going blindly into the women’s world: a reflective lifeworld research study of fathers’ expectations of and ex",
-        "A Dosimetric Comparison between Conventional and Conformal Technique of Chest Wall Radiation in Breast Cancer ",
-        "The evidence for the impact of policy on physical activity outcomes within the school setting: A systematic re",
-        "Designing an Instrument Based on Native Fluorescence to Determine Soil Microbial Content at a Mars Analog Site",
-        "A topological approach to spectral clustering",
-        "A separation logic framework for HOL",
-        "Lipid Drug Conjugates: A Novel Approach for Drug Delivery A Systematic Review"
+        "Fabrication of ZnS/ZnO composite photocatalysts by spin-coating ZnS nanoparticles on ZnO thin film",
+        "Epitaxial growth technique for single-crystalline PbTiO 3 thin film on Si substrate using an HfO 2 buffer laye",
+        "Analysis of multi-layer thin-film materials using benchtop XRD and XRF systems",
+        "Enhanced Free Surface Mobility Facilitates Release of Free-volume Holes in Thin-film Polymer Glasses",
+        "Influence of the magnetic field on the structural characteristics of granular Co Ag100- thin film alloys",
+        "Deposition of Nb-Si-C Thin Films by Radio Frequency Magnetron Sputtering",
+        "Correlation of Thermoelectric Performance, Domain Morphology and Doping Level in PEDOT:PSS Thin Films Post‐Tre",
+        "Light-induced topological phases in thin films of magnetically doped topological insulators",
+        "Highly efficient second-harmonic generation in an electro-optic chiral material using total-internal-reflectio",
+        "In situ X-ray photoelectron spectroscopy study: effect of inert Ar sputter etching on the core-level spectra o"
       ]
     }
   ],
-  "scoringMs": 12016,
+  "scoringMs": 10758,
   "baseline": {
     "novelty": {
       "evaluated": 626,
@@ -251,7 +263,94 @@
     },
     "qualitative": [
       {
-        "query": "RAG",
+        "query": "DFT",
+        "corpusMatches": 6,
+        "answerable": true,
+        "top": [
+          "Magnetic crystalline-symmetry-protected axion electrodynamics and field-tunable unpinned Dirac cones in EuIn2A",
+          "Native point defects and their implications for the Dirac point gap at MnBi$_2$Te$_4$(0001)",
+          "Inelastic Neutron Scattering Study of Magnetic Exchange Pathways in MnS",
+          "Type‐II C2N/ZnTe Van Der Waals Heterostructure: A Promising Photocatalyst for Water Splitting",
+          "Prediction of chemically ordered dual transition metal carbides (MXenes) as high-capacity anode materials for ",
+          "First-principles study of electronic structure , magnetic and optical properties of Ti, V, Co and Ni doped two",
+          "Ultranarrow TaS2 Nanoribbons",
+          "Probing the structural, electronic and spectral properties of a NbB20− cluster",
+          "Large-Area Bernal-Stacked Bilayer Graphene Film on a Uniformly Rough Cu Surface via Chemical Vapor Deposition",
+          "Density functional theory investigation on lattice dynamics, elastic properties and origin of vanished magneti"
+        ]
+      },
+      {
+        "query": "density functional theory",
+        "corpusMatches": 17,
+        "answerable": true,
+        "top": [
+          "Magnetic crystalline-symmetry-protected axion electrodynamics and field-tunable unpinned Dirac cones in EuIn2A",
+          "Native point defects and their implications for the Dirac point gap at MnBi$_2$Te$_4$(0001)",
+          "Inelastic Neutron Scattering Study of Magnetic Exchange Pathways in MnS",
+          "Atomistic electronic structure in the single-chain limit of organic conductors",
+          "Type‐II C2N/ZnTe Van Der Waals Heterostructure: A Promising Photocatalyst for Water Splitting",
+          "Prediction of chemically ordered dual transition metal carbides (MXenes) as high-capacity anode materials for ",
+          "First-principles study of electronic structure , magnetic and optical properties of Ti, V, Co and Ni doped two",
+          "Ultranarrow TaS2 Nanoribbons",
+          "Probing the structural, electronic and spectral properties of a NbB20− cluster",
+          "Large-Area Bernal-Stacked Bilayer Graphene Film on a Uniformly Rough Cu Surface via Chemical Vapor Deposition"
+        ]
+      },
+      {
+        "query": "MRI",
+        "corpusMatches": 10,
+        "answerable": true,
+        "top": [
+          "The Unicorn Syndrom: Case of a Giant Skull Invasive Metastasis of a Pulmonary Cancer",
+          "Frequency of Anatomical Variations and Congenital Anomalies in Pancreatobiliary Tract through Magnetic Resonan",
+          "Atrophy patterns in isolated subscapularis lesions",
+          "Case of Steroid-Sensitive Neuronopathy as a Differential Diagnosis to Dissociative Paralysis in Conversion Dis",
+          "Agreement and accuracy of femorotibial cartilage morphometry in radiographic knee OA using different training ",
+          "Comparison of prostate imaging reporting and data system v2.1 and 2 in transition and peripheral zones: evalua",
+          "Imaging andrology of the future: Where functional imaging embraces the clinic",
+          "Ischemic hypoxic encephalopathy: The role of MRI of neonatal injury and medico-legal implication",
+          "Potential Biomarkers in Diagnosis, Prognosis and Prediction of Treatment Response in Malignant Glioma",
+          "Radiation Oncology Exhibits"
+        ]
+      },
+      {
+        "query": "COVID-19 vaccine",
+        "corpusMatches": 1,
+        "answerable": false,
+        "top": [
+          "FDA-authorized COVID-19 vaccines are effective per real-world evidence synthesized across a multi-state health",
+          "10. (A)Symmetries in Tagalog Relative Clause Processing",
+          "A Two Factor Image Based Authentication System",
+          "Extended E-N-DIST Algorithm for Alias Detection",
+          "Unsupervised Person Re-Identification Based on Multi-Dimensional Attention and Part Focus Network",
+          "A Design Methodology of Line Feedback Shift Registers With Quantum Cellular Automata",
+          "Natural Language Processing and Machine Learning for Identifying Incident Stroke From Electronic Health Record",
+          "KOHESI DAN KOHERENSI DALAM NOVEL KKN DI DESA PENARI KARYA SIMPLEMAN DAN IMPLIKASINYA TERHADAP PEMBELAJARAN BAH",
+          "Artificial Intelligence versus Human Thought : An Educational Reflection",
+          "Depth Privileged Scene Recognition via Dual Attention Hallucination"
+        ]
+      },
+      {
+        "query": "superconductivity",
+        "corpusMatches": 3,
+        "answerable": false,
+        "top": [
+          "InSbAs Two-Dimensional Electron Gases as a Platform for Topological Superconductivity",
+          "Theory of unconventional superconductivity in nickelate-based materials*",
+          "Competition between charge-density-wave and superconductivity in the kagome metal RbV3Sb5",
+          "10. (A)Symmetries in Tagalog Relative Clause Processing",
+          "A Two Factor Image Based Authentication System",
+          "Extended E-N-DIST Algorithm for Alias Detection",
+          "Unsupervised Person Re-Identification Based on Multi-Dimensional Attention and Part Focus Network",
+          "A Design Methodology of Line Feedback Shift Registers With Quantum Cellular Automata",
+          "Natural Language Processing and Machine Learning for Identifying Incident Stroke From Electronic Health Record",
+          "KOHESI DAN KOHERENSI DALAM NOVEL KKN DI DESA PENARI KARYA SIMPLEMAN DAN IMPLIKASINYA TERHADAP PEMBELAJARAN BAH"
+        ]
+      },
+      {
+        "query": "thin film deposition",
+        "corpusMatches": 0,
+        "answerable": false,
         "top": [
           "10. (A)Symmetries in Tagalog Relative Clause Processing",
           "A Two Factor Image Based Authentication System",
@@ -264,84 +363,9 @@
           "Depth Privileged Scene Recognition via Dual Attention Hallucination",
           "Optimized Extreme Learning Machine for Intelligent Spectrum Sensing in 5G systems"
         ]
-      },
-      {
-        "query": "LLM agents",
-        "top": [
-          "Theory of unconventional superconductivity in nickelate-based materials*",
-          "Commitment spells +918696805715",
-          "Aphrodite love spell +918696805715",
-          "Thermomagnetic Generation Performance of Gd and La(Fe, Si)13Hy/In Material for Low‐Grade Waste Heat Recovery",
-          "Graphene phonons lifetime and mean free path using ab initio molecular dynamics and spectral energy density an",
-          "10. (A)Symmetries in Tagalog Relative Clause Processing",
-          "A Two Factor Image Based Authentication System",
-          "Extended E-N-DIST Algorithm for Alias Detection",
-          "Unsupervised Person Re-Identification Based on Multi-Dimensional Attention and Part Focus Network",
-          "A Design Methodology of Line Feedback Shift Registers With Quantum Cellular Automata"
-        ]
-      },
-      {
-        "query": "diffusion",
-        "top": [
-          "T-Growth Stochastic Model: Simulation and Inference via Metaheuristic Algorithms",
-          "Incorporating a structural extracellular matrix gradient into a porcine urinary bladder matrix ‐based hydrogel",
-          "Carriage and Antibiogram of Methicillin Resistant Staphylococcus Aureus among Admitted Patients of a Surgical ",
-          "The theory of cosmic ray scattering on pre-existing MHD modes meets data",
-          "Deep Learning for Hyperbolic Conservation Laws with Non‐convex Flux",
-          "Quantum Mean-Field Games with the Observations of Counting Type",
-          "Influence Maximization based on a Non-dominated Sorting Genetic Algorithm",
-          "An ultrafast vibrational study of dynamical heterogeneity in the protic ionic liquid ethyl-ammonium nitrate. I",
-          "A highly controllable doping technique via interdiffusion between epitaxial germanium layers and GaAs",
-          "Elucidating the Kinetic Root of the Evolution of the Oriented Nanoporous Metal from Reduction-Induced Decompos"
-        ]
-      },
-      {
-        "query": "protein folding",
-        "top": [
-          "Determination of Process Noise for Underwater Target Tracking with Forward Looking Sonar",
-          "10. (A)Symmetries in Tagalog Relative Clause Processing",
-          "A Two Factor Image Based Authentication System",
-          "Extended E-N-DIST Algorithm for Alias Detection",
-          "Unsupervised Person Re-Identification Based on Multi-Dimensional Attention and Part Focus Network",
-          "A Design Methodology of Line Feedback Shift Registers With Quantum Cellular Automata",
-          "Natural Language Processing and Machine Learning for Identifying Incident Stroke From Electronic Health Record",
-          "KOHESI DAN KOHERENSI DALAM NOVEL KKN DI DESA PENARI KARYA SIMPLEMAN DAN IMPLIKASINYA TERHADAP PEMBELAJARAN BAH",
-          "Artificial Intelligence versus Human Thought : An Educational Reflection",
-          "Depth Privileged Scene Recognition via Dual Attention Hallucination"
-        ]
-      },
-      {
-        "query": "causal inference",
-        "top": [
-          "Natural Language Processing and Machine Learning for Identifying Incident Stroke From Electronic Health Record",
-          "Causal Inference Theory with Information Dependency Models",
-          "Factors associated with deaths due to COVID-19 versus other causes: population-based cohort analysis of UK pri",
-          "Sex difference and intra-operative tidal volume",
-          "The Presentation, Pace, and Profile of Infection and Sepsis Patients Hospitalized Through the Emergency Depart",
-          "FDA-authorized COVID-19 vaccines are effective per real-world evidence synthesized across a multi-state health",
-          "Renin-angiotensin system inhibition and outcome after coronary artery bypass grafting: A population-based stud",
-          "Glucose regulation and grip strength in adults: Findings from the Helsinki Birth Cohort Study",
-          "Mortality in cutaneous malignant melanoma and its association with Neutrophil-to-Lymphocyte ratio.",
-          "C677T methylenetetrahydrofolate reductase polymorphism, folate and homocysteine levels and the risk of colorec"
-        ]
-      },
-      {
-        "query": "sparse autoencoder",
-        "top": [
-          "Investigation of PVT-Aware STT-MRAM Sensing Circuits for Low-VDD Scenario",
-          "10. (A)Symmetries in Tagalog Relative Clause Processing",
-          "A Two Factor Image Based Authentication System",
-          "Extended E-N-DIST Algorithm for Alias Detection",
-          "Unsupervised Person Re-Identification Based on Multi-Dimensional Attention and Part Focus Network",
-          "A Design Methodology of Line Feedback Shift Registers With Quantum Cellular Automata",
-          "Natural Language Processing and Machine Learning for Identifying Incident Stroke From Electronic Health Record",
-          "KOHESI DAN KOHERENSI DALAM NOVEL KKN DI DESA PENARI KARYA SIMPLEMAN DAN IMPLIKASINYA TERHADAP PEMBELAJARAN BAH",
-          "Artificial Intelligence versus Human Thought : An Educational Reflection",
-          "Depth Privileged Scene Recognition via Dual Attention Hallucination"
-        ]
       }
     ],
-    "scoringMs": 5100
+    "scoringMs": 4125
   },
   "llmBaseline": {
     "papers": 300,
@@ -369,7 +393,7 @@
   "deltas": {
     "novelty_ndcg_at_50": 0.0752,
     "novelty_auc": 0.0996,
-    "relevance_ndcg_at_20": 0.3557,
+    "relevance_ndcg_at_20": 0.395,
     "combined_ndcg_at_50": -0.2619
   }
 }

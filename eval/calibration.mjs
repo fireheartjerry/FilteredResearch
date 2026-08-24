@@ -63,6 +63,16 @@ async function main() {
   const shifts = focus.map((work) => Math.abs((large.get(work.id) || 0) - (small.get(work.id) || 0)));
   const size_ok = mean(shifts) < 5;
 
+  // The check above doubles the index with peers from OTHER fields, which
+  // conflates two different things: the index growing, and the index changing
+  // subject. Both matter, but only the first is what a user actually experiences
+  // as their own scope fills up, so it is measured separately. The stricter
+  // cross-field number stays the one the check passes or fails on.
+  const sameFieldHalf = halfPeers.filter((_, index) => index % 2 === 0);
+  const smallSame = new Map(adapter.scoreBatch(focus, sameFieldHalf, corpus.authors).map((w) => [w.id, w.noveltyScore || 0]));
+  const largeSame = new Map(adapter.scoreBatch(focus, halfPeers, corpus.authors).map((w) => [w.id, w.noveltyScore || 0]));
+  const sameFieldShift = mean(focus.map((work) => Math.abs((largeSame.get(work.id) || 0) - (smallSame.get(work.id) || 0))));
+
   // Rank stability: drop a random tenth of the corpus and re-score. If the order
   // reshuffles, the score is reporting corpus composition, not the papers.
   const random = seededRandom(31337);
@@ -86,6 +96,7 @@ async function main() {
     sigma_ratio: Number(sigmaRatio.toFixed(3)),
     drift_ok,
     corpus_doubling_mean_shift: Number(mean(shifts).toFixed(2)),
+    corpus_doubling_same_field_shift: Number(sameFieldShift.toFixed(2)),
     size_ok,
     resample_rank_spearman: Number(rankStability.toFixed(4)),
     stability_ok,
@@ -97,7 +108,8 @@ async function main() {
 
   console.log(`decile occupancy      ${report.decile_occupancy.join(" ")}   ${occupancy_ok ? "ok" : "FAIL"}`);
   console.log(`cross-cell mean drift ${report.mean_drift_points} pts, sigma ratio ${report.sigma_ratio}   ${drift_ok ? "ok" : "FAIL"}`);
-  console.log(`corpus doubling shift ${report.corpus_doubling_mean_shift} pts   ${size_ok ? "ok" : "FAIL"}`);
+  console.log(`corpus doubling shift ${report.corpus_doubling_mean_shift} pts (cross-field)   ${size_ok ? "ok" : "FAIL"}`);
+  console.log(`  same-field doubling  ${report.corpus_doubling_same_field_shift} pts   (reported, not gated)`);
   console.log(`resample rank rho     ${report.resample_rank_spearman}   ${stability_ok ? "ok" : "FAIL"}`);
   console.log(`\n${passed}/4 calibration checks pass\n`);
   process.exitCode = passed === 4 ? 0 : 1;

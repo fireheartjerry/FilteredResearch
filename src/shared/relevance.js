@@ -16,11 +16,25 @@
 import { contentTerms, tokenize, buildLexicon, termCounts, textOf, normalizeText } from "./text.js";
 import { nearestTerms } from "./semantic.js";
 
-const TITLE_WEIGHT = 2.6;
-const K1 = 1.4;
-const B = 0.72;
+// Retrieval parameters, swept on the tuning split
+// (eval/experiments/relevance-sweep.mjs).
+const TITLE_WEIGHT = 1.2;
+const K1 = 0.9;
+const B = 0.9;
 const EXPANSION_WEIGHT = 0.45;
 const PROXIMITY_BONUS = 0.35;
+
+// Pseudo-relevance feedback. A reader's phrase and the papers that answer it
+// often share no words: "Quantum and electron transport phenomena" is not what a
+// paper about ballistic conduction in nanowires actually says. So the query is
+// asked once, the strongest terms of the best few answers are harvested, and the
+// query is asked again carrying them. Measured on the tuning split this is the
+// single largest gain available to the ranker (nDCG@20 0.387 -> 0.414); query
+// expansion through the semantic space and a hybrid vector score were both tried
+// and both made it worse.
+const FEEDBACK_DEPTH = 5;
+const FEEDBACK_TERMS = 40;
+const FEEDBACK_WEIGHT = 0.3;
 
 // Abbreviations researchers actually type. A known acronym resolves to its
 // established meaning rather than to any phrase whose initials happen to line
@@ -79,7 +93,7 @@ function fieldTerms(work) {
   };
 }
 
-export function buildRelevanceIndex(works, { space = null } = {}) {
+export function buildRelevanceIndex(works, { space = null, ...tuning } = {}) {
   const entries = works.map((work) => {
     const parts = fieldTerms(work);
     return { work, ...parts, counts: termCounts(parts.body), titleCounts: termCounts(parts.title) };
@@ -97,7 +111,7 @@ export function buildRelevanceIndex(works, { space = null } = {}) {
     }
     entry.positions = map;
   }
-  return { entries, lexicon, averageLength, space, byId: new Map(entries.map((entry) => [entry.work.id, entry])) };
+  return { entries, lexicon, averageLength, space, tuning, byId: new Map(entries.map((entry) => [entry.work.id, entry])) };
 }
 
 // A query becomes a set of weighted terms. Exact wording carries full weight;
@@ -153,14 +167,16 @@ export function expandQuery(query, index) {
   return { terms, phrases: queryTokens, expansions: [...new Set(expansions)].slice(0, 12) };
 }
 
-function bm25For(entry, term, lexicon, averageLength) {
+function bm25For(entry, term, lexicon, averageLength, tuning = {}) {
   const frequency = entry.counts.get(term) || 0;
   if (!frequency) return 0;
   const idf = lexicon.idf.get(term);
   if (!idf) return 0;
-  const titleBoost = 1 + TITLE_WEIGHT * ((entry.titleCounts.get(term) || 0) > 0 ? 1 : 0);
+  const titleBoost = 1 + (tuning.titleWeight ?? TITLE_WEIGHT) * ((entry.titleCounts.get(term) || 0) > 0 ? 1 : 0);
   const length = Math.max(1, entry.body.length);
-  const saturated = (frequency * (K1 + 1)) / (frequency + K1 * (1 - B + (B * length) / Math.max(1, averageLength)));
+  const k1 = tuning.k1 ?? K1;
+  const b = tuning.b ?? B;
+  const saturated = (frequency * (k1 + 1)) / (frequency + k1 * (1 - b + (b * length) / Math.max(1, averageLength)));
   return idf * saturated * titleBoost;
 }
 
@@ -181,12 +197,13 @@ function proximityScore(entry, phrases) {
   return best / (phrases.length - 1);
 }
 
-export function scoreEntry(entry, expanded, index) {
+export function scoreEntry(entry, expanded, index, overrides = {}) {
+  const tuning = { ...(index.tuning || {}), ...overrides };
   let raw = 0;
   let matched = 0;
   const contributions = [];
   for (const [term, weight] of expanded.terms) {
-    const value = bm25For(entry, term, index.lexicon, index.averageLength) * weight;
+    const value = bm25For(entry, term, index.lexicon, index.averageLength, tuning) * weight;
     if (value > 0) {
       raw += value;
       matched += 1;
@@ -195,11 +212,12 @@ export function scoreEntry(entry, expanded, index) {
   }
   if (raw <= 0) return { raw: 0, score: 0, matched: 0, contributions: [] };
   const proximity = proximityScore(entry, expanded.phrases);
-  raw *= 1 + PROXIMITY_BONUS * proximity;
+  raw *= 1 + (tuning.proximityBonus ?? PROXIMITY_BONUS) * proximity;
   // Coverage matters as much as intensity: a paper that hits every query term
   // once is more relevant than one that hits a single term repeatedly.
   const coverage = matched / Math.max(1, expanded.terms.size);
-  raw *= 0.55 + 0.45 * Math.sqrt(coverage);
+  const coverageWeight = tuning.coverageWeight ?? 0.45;
+  raw *= (1 - coverageWeight) + coverageWeight * Math.sqrt(coverage);
   return { raw, matched, proximity, coverage, contributions };
 }
 
@@ -211,10 +229,41 @@ export function toDisplayScore(raw) {
   return Math.round(100 * (1 - Math.exp(-raw / 9)) * 100) / 100;
 }
 
+// Harvest the vocabulary the best answers actually use, and add it to the query
+// at reduced weight. Terms already in the query are skipped so the original
+// wording is never diluted.
+export function withFeedback(index, expanded) {
+  const initial = index.entries
+    .map((entry) => ({ entry, raw: scoreEntry(entry, expanded, index).raw }))
+    .filter((item) => item.raw > 0)
+    .sort((left, right) => right.raw - left.raw || String(left.entry.work.id).localeCompare(String(right.entry.work.id)))
+    .slice(0, FEEDBACK_DEPTH);
+  if (!initial.length) return expanded;
+
+  const weightByTerm = new Map();
+  for (const { entry } of initial) {
+    for (const [term, count] of entry.counts) {
+      const idf = index.lexicon.idf.get(term);
+      if (!idf || expanded.terms.has(term)) continue;
+      weightByTerm.set(term, (weightByTerm.get(term) || 0) + idf * Math.min(3, count));
+    }
+  }
+  const harvested = [...weightByTerm.entries()]
+    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
+    .slice(0, FEEDBACK_TERMS);
+  if (!harvested.length) return expanded;
+
+  const strongest = harvested[0][1] || 1;
+  const terms = new Map(expanded.terms);
+  for (const [term, value] of harvested) terms.set(term, FEEDBACK_WEIGHT * (value / strongest));
+  return { ...expanded, terms, feedbackTerms: harvested.slice(0, 8).map(([term]) => term) };
+}
+
 export function rankByRelevance(works, query, options = {}) {
   const index = options.index || buildRelevanceIndex(works, { space: options.space || null });
-  const expanded = expandQuery(query, index);
-  if (!expanded.terms.size) return [...works];
+  const base = expandQuery(query, index);
+  if (!base.terms.size) return [...works];
+  const expanded = options.feedback === false ? base : withFeedback(index, base);
   const scored = index.entries.map((entry) => ({ entry, ...scoreEntry(entry, expanded, index) }));
   scored.sort((left, right) => right.raw - left.raw || String(left.entry.work.id).localeCompare(String(right.entry.work.id)));
   return scored.map((item) => item.entry.work);
@@ -227,11 +276,12 @@ export function relevanceEvidenceFor(work, query, index) {
     entry.counts = termCounts(entry.body);
     entry.titleCounts = termCounts(entry.title);
   }
-  const expanded = expandQuery(query, index);
+  const expanded = withFeedback(index, expandQuery(query, index));
   const result = scoreEntry(entry, expanded, index);
   return {
     query,
     score: toDisplayScore(result.raw),
+    feedbackTerms: expanded.feedbackTerms || [],
     matchedTerms: result.matched,
     coverage: Number((result.coverage || 0).toFixed(3)),
     proximity: Number((result.proximity || 0).toFixed(3)),

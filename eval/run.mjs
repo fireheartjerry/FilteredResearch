@@ -170,10 +170,19 @@ async function evaluateRanker(adapter, corpus, labels, queries) {
       .map((entry) => ({ query: entry.query, ndcg_at_20: round(entry.ndcg_at_20) })),
   };
 
-  const qualitative = QUALITATIVE_QUERIES.map((query) => ({
-    query,
-    top: rankForQuery(adapter, relevanceCorpus, query).slice(0, 10).map((work) => work.title.slice(0, 110)),
-  }));
+  const qualitative = QUALITATIVE_QUERIES.map((query) => {
+    const needle = query.toLowerCase();
+    // How many papers even contain the phrase. Without this a query the corpus
+    // cannot answer looks identical to a ranking failure.
+    const corpusMatches = relevanceCorpus.filter((work) =>
+      `${work.title || ""} ${work.abstract || ""}`.toLowerCase().includes(needle)).length;
+    return {
+      query,
+      corpusMatches,
+      answerable: corpusMatches >= 5,
+      top: rankForQuery(adapter, relevanceCorpus, query).slice(0, 10).map((work) => work.title.slice(0, 110)),
+    };
+  });
 
   return { name: adapter.name, scoringMs, novelty, authorship, combined, relevance, qualitative };
 }

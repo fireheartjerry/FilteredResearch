@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-24T01:43:48.978Z",
+  "generatedAt": "2026-08-24T02:15:00.596Z",
   "cells": 12,
   "fields": 4,
   "windows": 3,
@@ -20,6 +20,7 @@
   "sigma_ratio": 1.034,
   "drift_ok": true,
   "corpus_doubling_mean_shift": 7.88,
+  "corpus_doubling_same_field_shift": 13.1,
   "size_ok": false,
   "resample_rank_spearman": 0.9773,
   "stability_ok": true,
