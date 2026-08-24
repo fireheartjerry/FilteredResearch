@@ -180,6 +180,26 @@ a scoring one:
   tokenizer and the WASM runtime are included -- a 75x increase to a product whose
   pitch is that it is small, local and instant.
 
+**And the cheap version of it does not work.** The constraints also permit
+distilling a model into shippable weights, which would avoid the runtime
+dependency entirely: embed the vocabulary once offline, ship the term vectors, and
+build a document vector at runtime as an IDF-weighted average -- exactly what
+`src/shared/semantic.js` already does, with better vectors substituted in.
+Measured (`eval/experiments/distilled-vectors.mjs`), 5,328 terms distilled to
+2.0 MB at int8:
+
+| Method | nDCG@20 |
+|---|---|
+| Lexical, as shipped | 0.433 |
+| Best hybrid with distilled term vectors | 0.465 |
+| Distilled term vectors alone | 0.370 |
+| Contextual model | 0.638 |
+
+So +0.03 for 2 MB, and nothing close to the bar. The gain is in *contextual*
+sentence encoding, not in better word vectors -- averaging static vectors throws
+away what the model knows. There is no cheap version of this: the whole 22 MB and
+its runtime are what buy the points.
+
 **And it buys relevance only.** The same model was pointed at novelty
 (`eval/experiments/embedding-novelty.mjs`): crowding measured in a real semantic
 space separates disruptive from derivative research at **AUC 0.501** — chance,
