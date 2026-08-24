@@ -152,10 +152,36 @@ space with a materially better one (PPMI plus power-iteration refinement, which
 lifts same-topic discrimination from AUC 0.67 to 0.73) moves relevance by 0.003.
 The gap is comprehension, and no local bag-of-words method reproduces it.
 
-So the points stay lost rather than the threshold being moved. If the "no
-hosted model at runtime" constraint were ever relaxed -- an optional
-user-supplied key used only for reranking the top hundred -- this criterion is
-reachable. That is a product decision, not a scoring one.
+**Measured follow-up: a bundled local model closes it.** The user's constraints
+permit shipping a model inside the extension ("bundling a local embedding model
+is fine even if it makes the .zip large and the first load slow, because nobody
+pays for it"), which is not the same as calling a hosted one and was under-read
+the first time. `eval/experiments/embedding-spike.mjs` measures it on the same
+held-out queries with a 22 MB quantized MiniLM:
+
+| Method | nDCG@20 |
+|---|---|
+| Lexical, as shipped | 0.433 |
+| Hybrid, half and half | 0.565 |
+| Embeddings alone | **0.638** |
+
+That clears the 10-point tier and lands within 0.02 of the LLM reranker. The ten
+points are real and reachable inside the stated constraints.
+
+What stops it being done here is the cost, which is a product decision rather than
+a scoring one:
+
+- **Runtime.** 27.7 ms per document. A 10,000-paper pass becomes 277 s against a
+  baseline of 11 s -- 25x, where gate G6 permits 3x. Embedding only the papers a
+  feed window actually shows (250) costs 6.9 s and would pass, but that is a
+  different architecture: embeddings computed once per paper at index time,
+  persisted, and reused, rather than a scoring pass that recomputes them.
+- **Size.** The packaged extension goes from 0.37 MB to roughly 28 MB once weights,
+  tokenizer and the WASM runtime are included -- a 75x increase to a product whose
+  pitch is that it is small, local and instant.
+
+The criterion is therefore left unmet and un-amended, with the route to meeting it
+measured and written down rather than asserted.
 
 - 15 pts: a graded relevance score exists, is used in ordering, nDCG@20 >= 0.70, all six qualitative top-10s defensible
 - 10 pts: graded score exists, nDCG@20 >= 0.55
