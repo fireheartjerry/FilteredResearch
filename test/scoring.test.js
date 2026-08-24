@@ -2,11 +2,36 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
-  cosineSimilarity,
-  buildVector,
   scoreBatch,
   scoreResearcherAuthorship,
+  contentTerms,
+  buildLexicon,
+  bm25Weights,
+  cosineOfWeighted,
 } from "../src/shared/scoring.js";
+
+// BM25 weights are corpus-relative, so a similarity is only meaningful inside a
+// corpus. These filler documents give the term statistics something to work
+// against; with only the two texts under comparison, every shared term looks
+// ubiquitous and its weight collapses.
+const FILLER = [
+  "photonic crystal waveguide dispersion engineering",
+  "clinical trial randomised placebo cohort outcome",
+  "catalyst surface adsorption energy barrier",
+  "galaxy redshift survey dark matter halo",
+  "protein folding molecular dynamics simulation",
+  "graph neural network message passing aggregation",
+  "quantum error correction surface code threshold",
+  "sediment core isotope palaeoclimate reconstruction",
+];
+
+function similarity(left, right) {
+  const documents = [left, right, ...FILLER].map((text) => contentTerms(text));
+  const lexicon = buildLexicon(documents);
+  const averageLength = documents.reduce((sum, terms) => sum + terms.length, 0) / documents.length;
+  const [a, b] = documents.map((terms) => bm25Weights(terms, lexicon, averageLength));
+  return cosineOfWeighted(a, b);
+}
 
 function work(id, publicationDate, title, abstract, authorId = "A1") {
   return {
@@ -23,12 +48,15 @@ function work(id, publicationDate, title, abstract, authorId = "A1") {
   };
 }
 
-test("cosine similarity is high for close language and low for unrelated language", () => {
-  const battery = buildVector("solid state sodium battery electrolyte transport");
-  const close = buildVector("sodium battery solid electrolyte ion transport");
-  const distant = buildVector("medieval poetry manuscript authorship archive");
-  assert.ok(cosineSimilarity(battery, close) > 0.6);
-  assert.ok(cosineSimilarity(battery, distant) < 0.1);
+test("lexical similarity is high for close language and low for unrelated language", () => {
+  const battery = "solid state sodium battery electrolyte transport";
+  const close = "sodium battery solid electrolyte ion transport";
+  const distant = "medieval poetry manuscript authorship archive";
+  const near = similarity(battery, close);
+  const far = similarity(battery, distant);
+  assert.ok(near > 0.25, `related texts should be close, got ${near.toFixed(3)}`);
+  assert.ok(far < 0.05, `unrelated texts should be far apart, got ${far.toFixed(3)}`);
+  assert.ok(near > 5 * far + 0.1, "the gap between related and unrelated must be large");
 });
 
 test("a genuinely distant candidate outranks an incremental rephrasing", () => {

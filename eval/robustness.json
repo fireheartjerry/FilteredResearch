@@ -1,0 +1,139 @@
+{
+  "generatedAt": "2026-08-24T00:55:45.088Z",
+  "total": 22,
+  "passed": 22,
+  "results": [
+    {
+      "case": "empty abstract",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "title only, no abstract field",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "empty title and abstract",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "zero peers",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "one peer",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "all peers identical",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "candidate identical to a peer",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "candidate is its own peer",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "12k character abstract",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "malformed publication date",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "null publication date",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "missing topics",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "missing authorships",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "missing referencedWorks",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "non-english record",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "control characters and escapes",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "every paper shares one date",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "duplicate candidate ids",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "numeric-only title",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "single character tokens",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "null candidate mixed in",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    },
+    {
+      "case": "undefined peers array",
+      "threw": null,
+      "problems": [],
+      "ok": true
+    }
+  ]
+}

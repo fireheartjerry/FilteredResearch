@@ -108,16 +108,26 @@ test("novelty separates consolidation work from genuinely new work", async () =>
     "A vector store with approximate nearest neighbour search provides passage lookup.",
   ];
   const abstractOf = (n) => Array.from({ length: n }, () => SENTENCES[Math.floor(rnd() * SENTENCES.length)]).join(" ");
-  const mk = (id, title, abstract, date) => ({
+  // Real OpenAlex records carry a reference list, and most of the scoring signals
+  // read it. A fixture without one exercises only the text fallback, so these
+  // papers get bibliographies: the field's own papers cite the field's canon, the
+  // survey cites a wide slice of it, and the new idea cites few of them.
+  const CANON = Array.from({ length: 40 }, (_, i) => `CANON${i}`);
+  const mk = (id, title, abstract, date, references = null) => ({
     id, title, abstract, subfieldId: "1702", domainId: "1",
-    publicationDate: date, authorships: [], topics: [{ fieldId: "17" }],
+    publicationDate: date, authorships: [{ authorId: `A${id}`, position: "first" }],
+    topics: [{ fieldId: "17", topicId: "T1", score: 0.9 }],
+    referencedWorks: references || CANON.slice(0, 10),
   });
-  const references = Array.from({ length: 160 }, (_, i) => mk(`R${i}`, `retrieval passage ranking ${i}`, abstractOf(8), "2024-01-01"));
+  const references = Array.from({ length: 160 }, (_, i) =>
+    mk(`R${i}`, `retrieval passage ranking ${i}`, abstractOf(8), "2024-01-01", CANON.slice(i % 20, (i % 20) + 12)));
   const slop = mk("slop", "Retrieval Augmented Generation: A Comprehensive Survey",
-    "We present a comprehensive survey of retrieval augmented generation methods. We review indexing, passage retrieval and reranking, and compare embedding models across established benchmark datasets.", "2026-01-01");
+    "We present a comprehensive survey of retrieval augmented generation methods. We review indexing, passage retrieval and reranking, and compare embedding models across established benchmark datasets.", "2026-01-01", CANON.slice(0, 34));
   const novel = mk("novel", "Attention Is All You Need",
-    "We propose the Transformer, a network architecture based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on machine translation show these models superior in quality while being more parallelizable.", "2026-01-01");
-  const ordinary = Array.from({ length: 24 }, (_, i) => mk(`ord${i}`, `passage reranking index ${i}`, abstractOf(7), "2026-01-01"));
+    "We propose the Transformer, a network architecture based solely on attention mechanisms, dispensing with recurrence and convolutions entirely. Experiments on machine translation show these models superior in quality while being more parallelizable.", "2026-01-01",
+    ["OUTSIDE1", "OUTSIDE2", "OUTSIDE3", "OUTSIDE4", "OUTSIDE5", CANON[3]]);
+  const ordinary = Array.from({ length: 24 }, (_, i) =>
+    mk(`ord${i}`, `passage reranking index ${i}`, abstractOf(7), "2026-01-01", CANON.slice(i % 18, (i % 18) + 11)));
 
   const scored = scoreBatch([slop, novel, ...ordinary], references, []);
   const scoreOf = (id) => scored.find((w) => w.id === id).noveltyScore;
@@ -126,8 +136,8 @@ test("novelty separates consolidation work from genuinely new work", async () =>
   assert.ok(scoreOf("novel") - scoreOf("slop") >= 8,
     `novel ${Math.round(scoreOf("novel"))} vs survey ${Math.round(scoreOf("slop"))}`);
   // A declared survey carries an explicit consolidation penalty.
-  assert.ok(scored.find((w) => w.id === "slop").noveltyEvidence.consolidation > 0);
-  assert.equal(scored.find((w) => w.id === "novel").noveltyEvidence.consolidation, 0);
+  assert.ok(scored.find((w) => w.id === "slop").noveltyEvidence.consolidationPrior > 0);
+  assert.equal(scored.find((w) => w.id === "novel").noveltyEvidence.consolidationPrior, 0);
   // And the field as a whole must use the range, not bunch at the top.
   const all = scored.map((w) => w.noveltyScore);
   assert.ok(Math.max(...all) - Math.min(...all) > 20, `range ${Math.min(...all)}-${Math.max(...all)}`);
@@ -138,6 +148,10 @@ test("no source file carries control characters", async () => {
   // byte, silently disabling the survey and benchmark detection.
   for (const file of [
     "../src/shared/scoring.js",
+    "../src/shared/novelty.js",
+    "../src/shared/relevance.js",
+    "../src/shared/semantic.js",
+    "../src/shared/text.js",
     "../src/shared/filters.js",
     "../src/shared/ranking.js",
     "../src/shared/papers.js",

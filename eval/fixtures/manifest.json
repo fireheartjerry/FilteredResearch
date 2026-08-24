@@ -1,0 +1,382 @@
+{
+  "builtAt": "2026-08-24T00:03:38.907Z",
+  "seed": 20210101,
+  "fields": [
+    {
+      "id": "17",
+      "name": "Computer Science"
+    },
+    {
+      "id": "27",
+      "name": "Medicine"
+    },
+    {
+      "id": "31",
+      "name": "Physics and Astronomy"
+    },
+    {
+      "id": "25",
+      "name": "Materials Science"
+    }
+  ],
+  "windows": [
+    {
+      "key": "2021Q1",
+      "from": "2021-01-01",
+      "to": "2021-03-31"
+    },
+    {
+      "key": "2021Q2",
+      "from": "2021-04-01",
+      "to": "2021-06-30"
+    },
+    {
+      "key": "2021Q3",
+      "from": "2021-07-01",
+      "to": "2021-09-30"
+    }
+  ],
+  "peerWindow": {
+    "from": "2018-01-01",
+    "to": "2020-12-31"
+  },
+  "citationHorizon": "2026-01-01",
+  "counts": {
+    "candidates": 2267,
+    "withDisruption": 1026,
+    "reviews": 246,
+    "withAbstract": 1656,
+    "withReferences": 1663,
+    "peers": 3598,
+    "authors": 6651,
+    "tune": 919,
+    "test": 1348
+  },
+  "queries": [
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/17,from_publication_date:2021-01-01,to_publication_date:2021-03-31,type:article|preprint|review,language:en",
+      "sample": 170,
+      "seed": 20210101,
+      "per_page": 170,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/17,from_publication_date:2021-04-01,to_publication_date:2021-06-30,type:article|preprint|review,language:en",
+      "sample": 170,
+      "seed": 20210101,
+      "per_page": 170,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/17,from_publication_date:2021-07-01,to_publication_date:2021-09-30,type:article|preprint|review,language:en",
+      "sample": 170,
+      "seed": 20210101,
+      "per_page": 170,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/27,from_publication_date:2021-01-01,to_publication_date:2021-03-31,type:article|preprint|review,language:en",
+      "sample": 170,
+      "seed": 20210101,
+      "per_page": 170,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/27,from_publication_date:2021-04-01,to_publication_date:2021-06-30,type:article|preprint|review,language:en",
+      "sample": 170,
+      "seed": 20210101,
+      "per_page": 170,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/27,from_publication_date:2021-07-01,to_publication_date:2021-09-30,type:article|preprint|review,language:en",
+      "sample": 170,
+      "seed": 20210101,
+      "per_page": 170,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/31,from_publication_date:2021-01-01,to_publication_date:2021-03-31,type:article|preprint|review,language:en",
+      "sample": 170,
+      "seed": 20210101,
+      "per_page": 170,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/31,from_publication_date:2021-04-01,to_publication_date:2021-06-30,type:article|preprint|review,language:en",
+      "sample": 170,
+      "seed": 20210101,
+      "per_page": 170,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/31,from_publication_date:2021-07-01,to_publication_date:2021-09-30,type:article|preprint|review,language:en",
+      "sample": 170,
+      "seed": 20210101,
+      "per_page": 170,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/25,from_publication_date:2021-01-01,to_publication_date:2021-03-31,type:article|preprint|review,language:en",
+      "sample": 170,
+      "seed": 20210101,
+      "per_page": 170,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/25,from_publication_date:2021-04-01,to_publication_date:2021-06-30,type:article|preprint|review,language:en",
+      "sample": 170,
+      "seed": 20210101,
+      "per_page": 170,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/25,from_publication_date:2021-07-01,to_publication_date:2021-09-30,type:article|preprint|review,language:en",
+      "sample": 170,
+      "seed": 20210101,
+      "per_page": 170,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/17,from_publication_date:2021-01-01,to_publication_date:2021-09-30,type:review,language:en",
+      "sample": 70,
+      "seed": 20210101,
+      "per_page": 70,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/27,from_publication_date:2021-01-01,to_publication_date:2021-09-30,type:review,language:en",
+      "sample": 70,
+      "seed": 20210101,
+      "per_page": 70,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/31,from_publication_date:2021-01-01,to_publication_date:2021-09-30,type:review,language:en",
+      "sample": 70,
+      "seed": 20210101,
+      "per_page": 70,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/25,from_publication_date:2021-01-01,to_publication_date:2021-09-30,type:review,language:en",
+      "sample": 70,
+      "seed": 20210101,
+      "per_page": 70,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/17,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/17,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 2,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/17,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 3,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/17,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 4,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/17,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 5,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/27,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/27,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 2,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/27,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 3,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/27,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 4,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/27,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 5,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/31,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/31,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 2,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/31,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 3,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/31,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 4,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/31,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 5,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/25,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 1,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/25,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 2,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/25,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 3,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/25,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 4,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    },
+    {
+      "endpoint": "works",
+      "filter": "primary_topic.field.id:fields/25,from_publication_date:2018-01-01,to_publication_date:2020-12-31,type:article|preprint|review,language:en",
+      "sample": 900,
+      "seed": 20210101,
+      "per_page": 200,
+      "page": 5,
+      "select": "id,doi,title,language,publication_date,type,authorships,abstract_inverted_index,primary_topic,topics,primary_location,referenced_works,cited_by_count,counts_by_year"
+    }
+  ],
+  "note": "outcome.* fields are post-publication only and are never passed to a ranker."
+}

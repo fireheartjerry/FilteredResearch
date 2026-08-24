@@ -81,7 +81,12 @@ test("scores stay sane when the field is too small to calibrate", () => {
 });
 
 test("changing the scale forces stored scores to be recomputed", () => {
-  assert.equal(SCORING_VERSION, "peer-calibrated-novelty-v3");
+  // The exact string does not matter; that it moved off the retired scale does.
+  // Scores from the old lexical model are not comparable with these, so they
+  // must not survive an upgrade.
+  assert.notEqual(SCORING_VERSION, "peer-calibrated-novelty-v3");
+  assert.notEqual(SCORING_VERSION, "field-corpus-heuristics-v2");
+  assert.ok(SCORING_VERSION.length > 0);
   assert.match(worker, /item\.scoringVersion !== SCORING_VERSION/);
   assert.match(worker, /scoreBatch\(\[\.\.\.candidates, \.\.\.stale\]/);
 });
@@ -110,11 +115,12 @@ test("no async click handler can reject unhandled", () => {
   assert.match(panelScript, /\.catch\(\(error\) => \{[\s\S]*?Could not read saved settings/);
 });
 
-test("the indexed similarity search matches a naive pairwise implementation", async () => {
-  // Crowding is computed through a term posting list rather than by comparing
-  // every candidate with every peer. That is an optimisation, so it has to
-  // produce the same numbers, not merely similar ones.
-  const { buildVector, cosineSimilarity, scoreBatch: score } = await import("../src/shared/scoring.js");
+test("shortlisting peers does not change the score it produces", async () => {
+  // Candidates are compared against a shortlist of peers rather than against
+  // every peer, because a large field would otherwise dominate the runtime. That
+  // is an optimisation, so when the cohort is smaller than the shortlist it must
+  // produce identical numbers, not merely similar ones.
+  const { scoreBatch: score } = await import("../src/shared/scoring.js");
   let s = 99;
   const rnd = () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; };
   const vocab = Array.from({ length: 600 }, (_, i) => `w${i}`);
@@ -122,29 +128,38 @@ test("the indexed similarity search matches a naive pairwise implementation", as
   const mk = (id, date) => ({
     id, title: words(8), abstract: words(100),
     subfieldId: "1702", domainId: "1", publicationDate: date, authorships: [], topics: [{ fieldId: "17" }],
+    referencedWorks: Array.from({ length: 8 }, () => `REF${Math.floor(rnd() * 200)}`),
   });
   const references = Array.from({ length: 120 }, (_, i) => mk(`R${i}`, "2024-01-01"));
   const candidates = Array.from({ length: 60 }, (_, i) => mk(`C${i}`, "2026-01-01"));
-  const scored = score(candidates, references, []);
 
-  const all = [...references, ...candidates];
-  const df = new Map();
-  for (const w of all) {
-    for (const t of new Set(`${w.title} ${w.abstract}`.toLowerCase().match(/[a-z][a-z0-9-]{2,}/g) || [])) {
-      df.set(t, (df.get(t) || 0) + 1);
-    }
-  }
-  const idf = new Map([...df].map(([t, f]) => [t, Math.log((all.length + 1) / (f + 1)) + 1]));
-  const vectors = new Map(all.map((w) => [w.id, buildVector(`${w.title} ${w.abstract}`, idf)]));
-  const peerVectors = references.map((r) => vectors.get(r.id));
-
-  for (const work of scored) {
-    const sims = peerVectors.map((peer) => cosineSimilarity(vectors.get(work.id), peer));
-    const nearest = Math.max(...sims);
-    const top = [...sims].sort((a, b) => b - a).slice(0, 5);
-    const expected = 0.65 * nearest + 0.35 * (top.reduce((a, b) => a + b, 0) / top.length);
-    assert.ok(Math.abs(expected - work.noveltyEvidence.crowding) < 1e-9,
-      `crowding drifted for ${work.id}: ${expected} vs ${work.noveltyEvidence.crowding}`);
-    assert.ok(Math.abs(nearest - work.nearestSimilarity) < 1e-9, `nearest drifted for ${work.id}`);
+  const shortlisted = score(candidates, references, [], { maxPeerComparisons: 400 });
+  const exhaustive = score(candidates, references, [], { maxPeerComparisons: 100_000 });
+  for (let index = 0; index < shortlisted.length; index += 1) {
+    assert.equal(shortlisted[index].id, exhaustive[index].id);
+    assert.ok(
+      Math.abs(shortlisted[index].noveltyScore - exhaustive[index].noveltyScore) < 1e-9,
+      `shortlisting changed ${shortlisted[index].id}`,
+    );
   }
 });
+
+test("scoring the same corpus twice produces identical numbers", async () => {
+  // Stored scores are compared across sessions and a refresh rescores the feed,
+  // so any run-to-run drift would silently reshuffle a user's saved results.
+  const { scoreBatch: score } = await import("../src/shared/scoring.js");
+  const first = score([...typical, ...derivative], references, []);
+  const second = score([...typical, ...derivative], references, []);
+  for (let index = 0; index < first.length; index += 1) {
+    assert.equal(first[index].id, second[index].id);
+    assert.equal(first[index].noveltyScore, second[index].noveltyScore);
+    assert.equal(first[index].researcherScore, second[index].researcherScore);
+  }
+  // Order of arrival must not matter either.
+  const shuffled = score([...derivative, ...typical], references, []);
+  const byId = new Map(shuffled.map((work) => [work.id, work.noveltyScore]));
+  for (const work of first) {
+    assert.ok(Math.abs(byId.get(work.id) - work.noveltyScore) < 1e-9, `order changed ${work.id}`);
+  }
+});
+

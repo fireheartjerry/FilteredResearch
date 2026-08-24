@@ -1,12 +1,106 @@
+// Scoring: novelty, authorship, and the order the feed is presented in.
+//
+// The previous model asked one question -- how far is this paper's wording from
+// other papers' wording -- and answered it with TF-IDF cosine against the first
+// 320 older records in insertion order. Measured against papers whose
+// disruptiveness is now known, that score's rank correlation with reality was
+// -0.05: no relationship at all.
+//
+// This version asks five questions (see novelty.js), ranks each inside the
+// paper's own field, and fuses only the ones it actually has evidence for. The
+// weights are fixed constants fitted on a tuning split that is disjoint from
+// every number ever reported; see eval/tune-weights.mjs and eval/README.md.
+
 import { INCREMENTAL_MARKERS } from "./defaults.js";
+import { contentTerms, textOf, tokenize, buildLexicon, bm25Weights, cosineOfWeighted } from "./text.js";
+import {
+  buildNoveltyModel,
+  buildCohortCache,
+  cohortFor,
+  groupPeers,
+  measureCandidate,
+  rankIn,
+  NOVELTY_MODEL_VERSION,
+} from "./novelty.js";
 
-export const SCORING_VERSION = "peer-calibrated-novelty-v3";
+export const SCORING_VERSION = `${NOVELTY_MODEL_VERSION}+authorship-fieldnorm-v1`;
 
-const STOPWORDS = new Set(
-  `a an and are as at be been being by can could did do does for from had has have how if in into is it its may might more most no not of on or our should so such than that the their then there these they this those through to under using via was we were what when where which while who will with would`.split(
-    " ",
-  ),
-);
+// Fitted on the tuning split (see eval/tune-weights.mjs). Each entry is a
+// direction as well as a magnitude: `invert` means less of this signal is more
+// novel.
+// Fitted by coordinate ascent on the tuning split (eval/tune-weights.mjs), then
+// shrunk toward a uniform prior over every signal that correlates positively on
+// its own. The raw argmax put 0.36 on two correlated co-citation statistics and
+// zeroed the rest; with only 400 labelled papers to fit on, that pattern moved
+// between runs, which is the classic sign of fitting noise. Every signal with
+// individual evidence therefore keeps a non-zero weight.
+//
+// `invert` means less of this signal is more novel.
+export const NOVELTY_WEIGHTS = Object.freeze([
+  { key: "pairSupport", weight: 0.24, invert: true, label: "sources rarely cited together" },
+  { key: "unseenPairFraction", weight: 0.20, invert: false, label: "joins sources nobody has joined" },
+  { key: "canonShare", weight: 0.17, invert: true, label: "not built on the standard canon" },
+  { key: "referenceCount", weight: 0.11, invert: true, label: "not a broad survey" },
+  { key: "unfamiliarReferenceFraction", weight: 0.08, invert: false, label: "draws on outside literature" },
+  { key: "emergentDensity", weight: 0.07, invert: false, label: "introduces new terminology" },
+  { key: "strongestCoupling", weight: 0.04, invert: true, label: "no shared bibliography with existing work" },
+  { key: "genericness", weight: 0.04, invert: true, label: "not a generic restatement of the field" },
+  { key: "coupledPeerFraction", weight: 0.02, invert: true, label: "few papers share its sources" },
+  { key: "crowding", weight: 0.02, invert: true, label: "unlike existing work" },
+  { key: "topicConcentration", weight: 0.01, invert: false, label: "focused on one topic" },
+]);
+
+// A near-verbatim restatement of existing work is the least novel thing that can
+// enter a corpus, whatever its bibliography looks like. The reference signals
+// above cannot see that -- a copied paper can carry an unusual reference list --
+// so text similarity acts as a ceiling on the score rather than as another term
+// added into it. Kept out of the additive fusion deliberately: measured against
+// real outcomes, text distance carries no disruption signal at all, so paying for
+// it across the whole distribution would cost accuracy everywhere to catch a case
+// that is rare but unacceptable.
+const DUPLICATE_FLOOR = 0.75;
+const DUPLICATE_CEILING = 0.95;
+
+function duplicateCeiling(similarity) {
+  if (!(similarity > DUPLICATE_FLOOR)) return 100;
+  if (similarity >= DUPLICATE_CEILING) return 4;
+  return 100 - ((similarity - DUPLICATE_FLOOR) / (DUPLICATE_CEILING - DUPLICATE_FLOOR)) * 96;
+}
+
+// Carries more weight than it otherwise would because roughly a third of
+// OpenAlex records arrive with no reference list at all, and for those the
+// structural detector below has nothing to read. A title that says "A
+// Comprehensive Survey" is the only evidence available on such a record, and
+// ignoring it would leave surveys unranked exactly where the algorithm is
+// weakest.
+const LEXICAL_CONSOLIDATION_WEIGHT = 6;
+const STRUCTURAL_CONSOLIDATION_WEIGHT = 34;
+
+// Consolidation detected from shape alone -- no keyword list, no document-type
+// field. Logistic coefficients fitted on the tuning split against OpenAlex's own
+// `type: review` flag (eval/experiments/consolidation-fit.mjs), operating on
+// features rank-normalised inside the batch. Held-out separation is AUC 0.727,
+// against 0.738 on the data it was fitted to, so it is genuinely reading the
+// structure of consolidation work rather than memorising this corpus.
+//
+// The document-type field is deliberately NOT used as an input. It is what the
+// benchmark defines the negative class with, so feeding it back in would make
+// the measurement congratulate itself.
+const CONSOLIDATION_SHAPE = Object.freeze({
+  intercept: -2.869,
+  terms: [
+    ["referenceCount", 1.206],
+    ["topicConcentration", 1.668],
+    ["centrality", -1.177],
+    ["canonShare", 1.001],
+    ["coupledPeerFraction", -0.707],
+    ["teamSize", -0.678],
+    ["crowding", 0.506],
+    ["unfamiliarReferenceFraction", -0.486],
+    ["genericness", 0.177],
+    ["emergentDensity", 0.112],
+  ],
+});
 
 export function clamp(value, minimum = 0, maximum = 100) {
   // Scores pass through here, and a NaN would silently corrupt sorting and
@@ -18,337 +112,90 @@ export function clamp(value, minimum = 0, maximum = 100) {
   return Math.min(high, Math.max(low, number));
 }
 
-export function tokenize(text, maximum = 700) {
-  const tokens = String(text || "")
-    .toLowerCase()
-    .match(/[a-z][a-z0-9-]{2,}/g);
-  if (!tokens) return [];
-  return tokens.filter((token) => !STOPWORDS.has(token)).slice(0, maximum);
-}
+// ------------------------------------------------------------- lexical prior
 
-function counts(tokens) {
-  const result = new Map();
-  for (const token of tokens) result.set(token, (result.get(token) || 0) + 1);
-  return result;
-}
-
-export function buildVector(text, inverseDocumentFrequency = new Map()) {
-  const idf = inverseDocumentFrequency instanceof Map ? inverseDocumentFrequency : new Map();
-  const termCounts = counts(tokenize(text));
-  const vector = new Map();
-  let squaredNorm = 0;
-  for (const [term, frequency] of termCounts) {
-    const weight = (1 + Math.log(frequency)) * (idf.get(term) || 1);
-    vector.set(term, weight);
-    squaredNorm += weight * weight;
-  }
-  return { vector, norm: Math.sqrt(squaredNorm) };
-}
-
-export function cosineSimilarity(left, right) {
-  if (!left?.norm || !right?.norm || !(left.vector instanceof Map) || !(right.vector instanceof Map)) return 0;
-  const [smaller, larger] =
-    left.vector.size <= right.vector.size
-      ? [left.vector, right.vector]
-      : [right.vector, left.vector];
-  let dot = 0;
-  for (const [term, weight] of smaller) dot += weight * (larger.get(term) || 0);
-  return clamp(dot / (left.norm * right.norm), 0, 1);
-}
-
-// Raw cosine distance is not a meaningful scale on its own: in a field with a
-// wide vocabulary almost every pair of papers sits at 0.05-0.20 similarity, so
-// "distance" reads 80-95% for derivative and groundbreaking work alike and the
-// resulting scores bunch into a narrow band. Novelty is therefore measured
-// against how crowded the field itself is, not against an absolute distance.
-
-function median(values) {
-  if (!values.length) return 0;
-  const sorted = [...values].sort((left, right) => left - right);
-  const middle = sorted.length >> 1;
-  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
-}
-
-// Term -> flat [peerIndex, weight, peerIndex, weight, ...]. Comparing every
-// candidate against every peer meant roughly two million cosine computations on
-// a full rescore, almost all of them between papers sharing no vocabulary at
-// all. Indexing the peers once lets a candidate touch only the peers that
-// actually share a term with it.
-function buildPeerPostings(peerVectors) {
-  const postings = new Map();
-  for (let index = 0; index < peerVectors.length; index += 1) {
-    const peer = peerVectors[index];
-    if (!peer?.vector) continue;
-    for (const [term, weight] of peer.vector) {
-      let list = postings.get(term);
-      if (!list) postings.set(term, (list = []));
-      list.push(index, weight);
-    }
-  }
-  return postings;
-}
-
-// How close a paper sits to the work that already exists: its nearest peer plus
-// the density of the neighbourhood, so one coincidental match cannot alone make
-// a paper look derivative.
-function crowdingOf(vector, peerVectors, postings = null, excludeIndex = -1) {
-  if (!peerVectors.length) return { crowding: 0, nearestIndex: -1, nearestSimilarity: 0 };
-  const index = postings || buildPeerPostings(peerVectors);
-  const dots = new Float64Array(peerVectors.length);
-  if (vector?.vector && vector.norm) {
-    for (const [term, weight] of vector.vector) {
-      const list = index.get(term);
-      if (!list) continue;
-      for (let position = 0; position < list.length; position += 2) {
-        dots[list[position]] += weight * list[position + 1];
-      }
-    }
-  }
-
-  const similarities = [];
-  let nearestSimilarity = 0;
-  let nearestIndex = -1;
-  for (let peer = 0; peer < peerVectors.length; peer += 1) {
-    if (peer === excludeIndex) continue;
-    const peerNorm = peerVectors[peer]?.norm || 0;
-    const similarity = peerNorm && vector?.norm
-      ? clamp(dots[peer] / (vector.norm * peerNorm), 0, 1)
-      : 0;
-    similarities.push(similarity);
-    if (similarity > nearestSimilarity) {
-      nearestSimilarity = similarity;
-      nearestIndex = peer;
-    }
-  }
-  if (!similarities.length) return { crowding: 0, nearestIndex: -1, nearestSimilarity: 0 };
-  similarities.sort((left, right) => right - left);
-  const topFive = similarities.slice(0, 5);
-  const neighbourhood = topFive.reduce((sum, value) => sum + value, 0) / topFive.length;
-  return { crowding: 0.65 * nearestSimilarity + 0.35 * neighbourhood, nearestIndex, nearestSimilarity };
-}
-
-// The field's own crowding distribution, measured by treating sampled peers as
-// candidates against the rest. Computed once per peer group and reused.
-const PEER_STATS_SAMPLE = 90;
-function peerFieldStats(peers, peerVectors, idf, postings = null) {
-  const step = Math.max(1, Math.floor(peerVectors.length / PEER_STATS_SAMPLE));
-  const peerPostings = postings || buildPeerPostings(peerVectors);
-  const crowdings = [];
-  const distinctions = [];
-  for (let index = 0; index < peerVectors.length && crowdings.length < PEER_STATS_SAMPLE; index += step) {
-    // Excluding by position avoids rebuilding a 300-element array per sample.
-    crowdings.push(crowdingOf(peerVectors[index], peerVectors, peerPostings, index).crowding);
-    const peer = peers[index];
-    if (peer) distinctions.push(distinctivenessOf(`${peer.title || ""} ${peer.abstract || ""}`, idf));
-  }
-  const crowding = distributionOf(crowdings);
-  if (!crowding) return null;
-  // Median absolute deviation, scaled to a standard-deviation equivalent, so a
-  // few unusual peers cannot flatten the scale.
-  return { crowding, distinctiveness: distributionOf(distinctions) };
-}
-
-// A second, independent signal. Crowding asks "has this been written before";
-// distinctiveness asks "does this introduce vocabulary the field does not
-// already have". A survey or benchmark paper reuses the field's common terms,
-// while work that introduces a genuinely new idea carries rare ones. Mean IDF
-// over a paper's own terms captures that cheaply and is orthogonal to cosine
-// distance, which is what makes incremental work separable from novel work.
-function distinctivenessOf(text, idf) {
-  const terms = tokenize(text, 400);
-  if (!terms.length) return 0;
-  const unique = [...new Set(terms)];
-  let total = 0;
-  for (const term of unique) total += idf.get(term) || 0;
-  return total / unique.length;
-}
-
-function distributionOf(values) {
-  if (values.length < 4) return null;
-  return { sorted: [...values].sort((left, right) => left - right), center: median(values) };
-}
-
-// Where a value sits within the field, expressed as a rank rather than a
-// z-score. Dividing by a spread is unsafe here: on a homogeneous corpus the
-// median absolute deviation collapses toward zero, which sent standings to 20
-// or even 170 and pinned every interesting paper to exactly 100 once passed
-// through a logistic. A rank cannot collapse, so the top of the scale keeps
-// resolving instead of saturating.
-function standingIn(distribution, value, higherIsMoreNovel) {
-  if (!distribution) return null;
-  const direction = higherIsMoreNovel ? 1 : -1;
-  // Order by "less novel first" for whichever direction applies, otherwise an
-  // inverted signal scans an ascending array and always reports rank zero.
-  const sorted = direction === 1
-    ? distribution.sorted
-    : [...distribution.sorted].reverse();
-  const target = direction * value;
-  let below = 0;
-  while (below < sorted.length && direction * sorted[below] < target) below += 1;
-  // The field occupies the lower 90% of the scale, leaving room above it for
-  // work that is more unusual than anything already published.
-  if (below < sorted.length) return (0.9 * below) / sorted.length;
-  const top = direction * sorted[sorted.length - 1];
-  const mid = direction * sorted[Math.floor(sorted.length / 2)];
-  const spread = Math.max(1e-9, Math.abs(top - mid));
-  return 0.9 + 0.1 * (1 - Math.exp(-Math.max(0, target - top) / spread));
-}
-
-// Work that announces itself as consolidating existing results. These are the
-// papers that should sit at the bottom of a novelty ranking.
+// Work that announces itself as consolidating existing results. This is a weak
+// prior only: the structural signals (reference count, centrality, terminology)
+// are what actually separate reviews, and eval:adversarial verifies that
+// switching this list off barely moves the separation.
 const SURVEY_PATTERNS = Object.freeze([
   /\ba (?:systematic |comprehensive |brief |short )?(?:survey|review|overview)\b/,
   /\bsurvey of\b/, /\bsystematic review\b/, /\bliterature review\b/,
   /\ba comparative (?:study|analysis|evaluation)\b/, /\ban empirical (?:study|analysis|evaluation)\b/,
-  /\bbenchmark(?:ing|s)?\b/, /\bevaluation of\b/, /\bcase study\b/,
-  /\breplication study\b/, /\bposition paper\b/, /\btutorial\b/,
+  /\bevaluation of\b/, /\bcase study\b/, /\breplication study\b/, /\bposition paper\b/, /\btutorial\b/,
 ]);
 
-function consolidationPenalty(title, abstract) {
-  const head = `${title} ${abstract.slice(0, 400)}`.toLowerCase();
-  const titleOnly = String(title || "").toLowerCase();
-  let penalty = 0;
+function consolidationShapeOf(measure, shapeDistributions) {
+  let total = CONSOLIDATION_SHAPE.intercept;
+  let seen = 0;
+  for (const [key, coefficient] of CONSOLIDATION_SHAPE.terms) {
+    const value = signalValue(measure, key);
+    const distribution = shapeDistributions.get(key);
+    if (!Number.isFinite(value) || !distribution) continue;
+    seen += 1;
+    total += coefficient * rankIn(distribution, value);
+  }
+  // Below about half the features there is not enough shape to judge, and a
+  // partial sum would read as confident when it is not.
+  if (seen < 5) return null;
+  return 1 / (1 + Math.exp(-total));
+}
+
+function consolidationPrior(work) {
+  const title = String(work.title || "").toLowerCase();
+  const head = `${title} ${String(work.abstract || "").slice(0, 400).toLowerCase()}`;
+  let hits = 0;
   for (const pattern of SURVEY_PATTERNS) {
-    if (pattern.test(titleOnly)) penalty += 9;
-    else if (pattern.test(head)) penalty += 4;
+    if (pattern.test(title)) hits += 1;
+    else if (pattern.test(head)) hits += 0.5;
   }
-  return Math.min(26, penalty);
+  const markers = INCREMENTAL_MARKERS.filter((marker) => head.includes(marker));
+  return { hits, markers, strength: Math.min(1, hits / 1.5 + markers.length * 0.25) };
 }
 
-function logistic(value) {
-  return 1 / (1 + Math.exp(-value));
-}
-
-// Without enough peers to describe the field, fall back to a fixed curve over
-// the nearest-peer similarity rather than inventing a distribution.
-function absoluteNovelty(nearestSimilarity) {
-  const points = [[0.02, 96], [0.08, 88], [0.15, 74], [0.25, 58], [0.35, 42], [0.5, 24], [0.7, 8], [1, 2]];
-  for (let index = 0; index < points.length; index += 1) {
-    const [similarity, score] = points[index];
-    if (nearestSimilarity <= similarity) {
-      const [previousSimilarity, previousScore] = index ? points[index - 1] : [0, 100];
-      const span = similarity - previousSimilarity || 1;
-      const progress = (nearestSimilarity - previousSimilarity) / span;
-      return previousScore + progress * (score - previousScore);
-    }
-  }
-  return 2;
-}
-
-function idfForWorks(works) {
-  const documentFrequency = new Map();
-  for (const work of works) {
-    const unique = new Set(tokenize(`${work.title || ""} ${work.abstract || ""}`));
-    for (const term of unique) {
-      documentFrequency.set(term, (documentFrequency.get(term) || 0) + 1);
-    }
-  }
-  const total = Math.max(1, works.length);
-  return new Map(
-    [...documentFrequency].map(([term, frequency]) => [
-      term,
-      Math.log((total + 1) / (frequency + 1)) + 1,
-    ]),
-  );
-}
-
-function titlePhrases(title) {
-  const tokens = tokenize(title, 40);
-  const phrases = [];
-  for (const size of [2, 3]) {
-    for (let index = 0; index <= tokens.length - size; index += 1) {
-      phrases.push(tokens.slice(index, index + size).join(" "));
-    }
-  }
-  return phrases;
-}
-
-function phraseRarity(work, peers) {
-  const candidate = titlePhrases(work.title);
-  if (!candidate.length) return 0.5;
-  const known = new Set(peers.flatMap((peer) => titlePhrases(peer.title)));
-  const unseenFraction = candidate.filter((phrase) => !known.has(phrase)).length / candidate.length;
-  return clamp((unseenFraction - 0.35) / 0.65, 0, 1);
-}
-
-function bridgeRarity(work, peers) {
-  const fields = [...new Set((work.topics || []).map((topic) => topic.fieldId).filter(Boolean))];
-  if (fields.length < 2) return 0.35;
-  const pairs = [];
-  for (let left = 0; left < fields.length; left += 1) {
-    for (let right = left + 1; right < fields.length; right += 1) {
-      pairs.push([fields[left], fields[right]].sort().join("|"));
-    }
-  }
-  const peerPairs = new Set();
-  for (const peer of peers) {
-    const peerFields = [...new Set((peer.topics || []).map((topic) => topic.fieldId).filter(Boolean))];
-    for (let left = 0; left < peerFields.length; left += 1) {
-      for (let right = left + 1; right < peerFields.length; right += 1) {
-        peerPairs.add([peerFields[left], peerFields[right]].sort().join("|"));
-      }
-    }
-  }
-  return pairs.length ? pairs.filter((pair) => !peerPairs.has(pair)).length / pairs.length : 0.35;
-}
-
-function buildPeerIndex(references) {
-  const bySubfield = new Map();
-  const byDomain = new Map();
-  for (const reference of references) {
-    if (reference.subfieldId) {
-      const peers = bySubfield.get(reference.subfieldId) || [];
-      peers.push(reference);
-      bySubfield.set(reference.subfieldId, peers);
-    }
-    if (reference.domainId) {
-      const peers = byDomain.get(reference.domainId) || [];
-      peers.push(reference);
-      byDomain.set(reference.domainId, peers);
-    }
-  }
-  return { all: references, bySubfield, byDomain };
-}
-
-function choosePeers(work, peerIndex, minimumTopicPeers, maximumPeers) {
-  const subfield = peerIndex.bySubfield.get(work.subfieldId) || [];
-  const domain = peerIndex.byDomain.get(work.domainId) || [];
-  const [source, groupKey] =
-    subfield.length >= minimumTopicPeers
-      ? [subfield, `subfield:${work.subfieldId}`]
-      : domain.length >= minimumTopicPeers
-        ? [domain, `domain:${work.domainId}`]
-        : [peerIndex.all, "all"];
-  const older = source.filter(
-    (reference) => reference.id !== work.id && reference.publicationDate < work.publicationDate,
-  );
-  return { peers: older.slice(0, maximumPeers), groupKey };
-}
+// ---------------------------------------------------------------- authorship
 
 function authorCareerScore(author) {
   const hIndex = Math.min(1, Math.log1p(author.hIndex || 0) / Math.log1p(80));
-  const citations = Math.min(
-    1,
-    Math.log1p(author.citedByCount || 0) / Math.log1p(100_000),
-  );
+  const citations = Math.min(1, Math.log1p(author.citedByCount || 0) / Math.log1p(100_000));
   const works = Math.min(1, Math.log1p(author.worksCount || 0) / Math.log1p(300));
-  const recent = Math.min(
-    1,
-    Math.log1p(Math.max(0, author.twoYearMeanCitedness || 0)) / Math.log1p(30),
-  );
+  const recent = Math.min(1, Math.log1p(Math.max(0, author.twoYearMeanCitedness || 0)) / Math.log1p(30));
   const identity = author.orcid ? 1 : 0.35;
   return 100 * (0.45 * hIndex + 0.25 * citations + 0.15 * recent + 0.1 * works + 0.05 * identity);
 }
 
-export function scoreResearcherAuthorship(work, authorMap) {
-  if (!work || typeof work !== "object") return { score: 0, evidence: [] };
+// An h-index of 40 is unremarkable in medicine and exceptional in mathematics.
+// Comparing a paper's authors with the authors publishing in the same field is
+// the only way one slider position can mean the same thing across a taxonomy.
+function buildFieldAuthorNorms(candidates, authorMap) {
+  const byField = new Map();
+  for (const work of candidates) {
+    const field = work.fieldId || work.domainId || "all";
+    if (!byField.has(field)) byField.set(field, []);
+    const bucket = byField.get(field);
+    for (const authorship of work.authorships || []) {
+      const author = authorMap.get(authorship.authorId);
+      if (author) bucket.push(authorCareerScore(author));
+    }
+  }
+  const norms = new Map();
+  const pooled = [];
+  for (const [field, values] of byField) {
+    pooled.push(...values);
+    if (values.length >= 30) norms.set(field, values.sort((left, right) => left - right));
+  }
+  norms.set("__pooled__", pooled.sort((left, right) => left - right));
+  return norms;
+}
+
+export function scoreResearcherAuthorship(work, authorMap, fieldNorms = null) {
+  if (!work || typeof work !== "object") return { score: 0, confidence: 0, evidence: [] };
   const evidence = [];
   for (const authorship of work.authorships || []) {
     const author = authorMap.get(authorship.authorId);
     if (!author) continue;
     const careerScore = authorCareerScore(author);
-    const roleWeight =
-      authorship.isCorresponding || ["first", "last"].includes(authorship.position) ? 1 : 0.86;
+    const roleWeight = authorship.isCorresponding || ["first", "last"].includes(authorship.position) ? 1 : 0.86;
     evidence.push({
       id: author.id,
       name: author.name,
@@ -363,162 +210,377 @@ export function scoreResearcherAuthorship(work, authorMap) {
       institution: author.lastInstitution,
     });
   }
+  if (!evidence.length) return { score: 0, confidence: 0, evidence: [] };
   evidence.sort((left, right) => right.score - left.score);
   const totalAuthors = Math.max(1, work.authorships?.length || 0);
-  const confidence = evidence.length / totalAuthors;
-  if (!evidence.length) return { score: 0, confidence: 0, evidence: [] };
+  const confidence = clamp(evidence.length / totalAuthors, 0, 1);
+
   const best = evidence[0].score;
-  const median = evidence[Math.floor(evidence.length / 2)].score;
+  const middle = evidence[Math.floor(evidence.length / 2)].score;
+  const raw = 0.82 * best + 0.18 * middle;
+
+  if (!fieldNorms) return { score: clamp(raw), confidence, evidence: evidence.slice(0, 5), fieldNormalised: false };
+  const field = work.fieldId || work.domainId || "all";
+  const distribution = fieldNorms.get(field) || fieldNorms.get("__pooled__") || [];
+  const percentile = distribution.length >= 30 ? rankIn(distribution, raw) : null;
+  // Blended rather than replaced: a pure percentile would erase the difference
+  // between a field where everyone is prolific and one where nobody is.
+  const score = percentile === null ? raw : 100 * (0.75 * percentile + 0.25 * (raw / 100));
   return {
-    score: clamp(0.82 * best + 0.18 * median),
-    confidence: clamp(confidence, 0, 1),
+    score: clamp(score),
+    confidence,
     evidence: evidence.slice(0, 5),
+    fieldNormalised: percentile !== null,
+    fieldPercentile: percentile,
+    rawCareerScore: clamp(raw),
   };
 }
 
-export function scoreBatch(candidates, references, authors, options = {}) {
-  candidates = (Array.isArray(candidates) ? candidates : []).filter((w) => w && typeof w === "object");
-  if (!candidates.length) return [];
-  references = (Array.isArray(references) ? references : []).filter((w) => w && typeof w === "object");
-  if (!Array.isArray(authors) && !(authors instanceof Map)) authors = [];
-  const settings = {
-    minTopicPeers: 20,
-    maxPeerComparisons: 320,
-    noveltySpread: 1.15,
-    incrementalMarkers: INCREMENTAL_MARKERS,
-    ...options,
-  };
-  const allForIdf = [...references, ...candidates].filter((work) => work.abstract || work.title);
-  const idf = idfForWorks(allForIdf);
-  const vectors = new Map(
-    allForIdf.map((work) => [work.id, buildVector(`${work.title || ""} ${work.abstract || ""}`, idf)]),
-  );
-  const peerIndex = buildPeerIndex(references);
-  const authorMap = authors instanceof Map ? authors : new Map(authors.map((author) => [author.id, author]));
+// -------------------------------------------------------------------- fusion
 
-  // First pass measures every candidate. The field distribution is then built
-  // from the peers *and* the candidates, so papers are ranked against each other
-  // as well as against past work. Ranking against peers alone left every
-  // candidate beyond the top of the peer range and therefore tied.
-  const statsByGroup = new Map();
-  const postingsByGroup = new Map();
-  const measured = candidates.map((work) => {
-    const { peers, groupKey } = choosePeers(
-      work,
-      peerIndex,
-      settings.minTopicPeers,
-      settings.maxPeerComparisons,
-    );
-    const candidateVector = vectors.get(work.id) || buildVector(`${work.title || ""} ${work.abstract || ""}`, idf);
-    const peerVectors = peers.map((peer) => vectors.get(peer.id)).filter(Boolean);
-    // The posting list is per peer group, so it is built once and reused by
-    // every candidate scored against that group.
-    let postings = postingsByGroup.get(groupKey);
-    if (!postings) {
-      postings = buildPeerPostings(peerVectors);
-      postingsByGroup.set(groupKey, postings);
-    }
-    const measure = crowdingOf(candidateVector, peerVectors, postings);
-    if (!statsByGroup.has(groupKey)) statsByGroup.set(groupKey, peerFieldStats(peers, peerVectors, idf, postings));
-    return {
-      work,
-      peers,
-      groupKey,
-      crowding: measure.crowding,
-      nearestIndex: measure.nearestIndex,
-      nearestSimilarity: measure.nearestSimilarity,
-      distinctiveness: distinctivenessOf(`${work.title} ${work.abstract || ""}`, idf),
-    };
-  });
+function signalValue(measure, key) {
+  if (key === "crowding") return measure.crowding;
+  if (key === "centrality") return measure.centrality;
+  if (key === "emergentDensity") return measure.emergentDensity;
+  if (key === "teamSize") return measure.teamSize > 0 ? measure.teamSize : null;
+  if (key === "genericness") return measure.genericness;
+  if (key === "topicConcentration") return measure.topicConcentration;
+  if (key === "strongestCoupling" || key === "coupledPeerFraction") return measure.coupling?.[key] ?? null;
+  if (!measure.combination) return null;
+  if (key === "referenceCount") return measure.combination.referenceCount;
+  return measure.combination[key] ?? null;
+}
 
-  for (const [groupKey, stats] of statsByGroup) {
-    if (!stats) continue;
-    const mine = measured.filter((item) => item.groupKey === groupKey);
-    if (!mine.length) continue;
-    stats.crowding = distributionOf([...stats.crowding.sorted, ...mine.map((item) => item.crowding)]);
-    if (stats.distinctiveness) {
-      stats.distinctiveness = distributionOf([
-        ...stats.distinctiveness.sorted,
-        ...mine.map((item) => item.distinctiveness),
-      ]);
+function monthOf(date) {
+  const text = String(date || "");
+  return /^\d{4}-\d{2}/.test(text) ? text.slice(0, 7) : "unknown";
+}
+
+// Combine the signals that have evidence, ignoring the ones that do not.
+// Imputing a neutral value for a missing signal would drag every record without
+// references toward the middle and hide the fact that less was known about it;
+// renormalising over what is present keeps the scale honest instead.
+function fuse(measure, perCohort) {
+  const contributions = [];
+  let total = 0;
+  let available = 0;
+  for (const signal of NOVELTY_WEIGHTS) {
+    const value = signalValue(measure, signal.key);
+    const distribution = perCohort?.get(signal.key);
+    if (!Number.isFinite(value) || !distribution) continue;
+    const rank = rankIn(distribution, value);
+    const oriented = signal.invert ? 1 - rank : rank;
+    total += signal.weight * oriented;
+    available += signal.weight;
+    contributions.push({ signal: signal.key, label: signal.label, rank: Number(oriented.toFixed(3)), weight: signal.weight });
+  }
+  return { fusedValue: available > 0 ? total / available : null, contributions, availableWeight: available };
+}
+
+// When a cohort is too small to describe a distribution -- a handful of papers,
+// or a field with almost no history -- there is nothing to rank against, so the
+// score falls back to a fixed curve over how close the nearest existing work is.
+// This is deliberately coarse: it is the honest resolution available when the
+// field cannot be characterised, and the confidence term reflects that.
+function absoluteNovelty(crowding) {
+  const points = [[0.05, 0.94], [0.15, 0.84], [0.3, 0.68], [0.45, 0.52], [0.6, 0.34], [0.75, 0.18], [1, 0.05]];
+  for (let index = 0; index < points.length; index += 1) {
+    const [threshold, value] = points[index];
+    if (crowding <= threshold) {
+      const [previousThreshold, previousValue] = index ? points[index - 1] : [0, 1];
+      const span = threshold - previousThreshold || 1;
+      return previousValue + ((crowding - previousThreshold) / span) * (value - previousValue);
     }
   }
+  return 0.05;
+}
 
-  return measured.map(({ work, peers, groupKey, crowding, nearestIndex, nearestSimilarity, distinctiveness }) => {
-    const nearest = nearestIndex >= 0 ? peers[nearestIndex] : null;
-    const semanticDistance = 1 - nearestSimilarity;
-    const stats = statsByGroup.get(groupKey);
+// --------------------------------------------------------------- entry point
 
-    const phrases = phraseRarity(work, peers);
-    const bridge = bridgeRarity(work, peers);
-    const haystack = `${work.title || ""} ${String(work.abstract || "").slice(0, 800)}`.toLowerCase();
-    const markers = settings.incrementalMarkers.filter((marker) => haystack.includes(marker));
-    const consolidation = consolidationPenalty(work.title, work.abstract || "");
-    const penalty = Math.min(34, markers.length * 5 + consolidation);
+export function scoreBatch(candidates, references, authors, options = {}) {
+  const settings = {
+    disableLexicalConsolidationPrior: false,
+    peerAnchorSample: 120,
+    structuralConsolidationWeight: STRUCTURAL_CONSOLIDATION_WEIGHT,
+    ...options,
+  };
+  const cleanCandidates = (Array.isArray(candidates) ? candidates : []).filter((work) => work && typeof work === "object");
+  if (!cleanCandidates.length) return [];
+  const cleanPeers = (Array.isArray(references) ? references : []).filter((work) => work && typeof work === "object");
+  const authorList = authors instanceof Map ? [...authors.values()] : Array.isArray(authors) ? authors : [];
+  const authorMap = authors instanceof Map ? authors : new Map(authorList.map((author) => [author.id, author]));
 
-    // Two independent questions, each scored against the field's own spread:
-    // how crowded the neighbourhood is, and how much vocabulary the paper adds
-    // that the field does not already use. Positioning against the field rather
-    // than an absolute distance is what lets the score use the whole 1-100
-    // range instead of bunching near the top.
-    // Less crowded is more novel, so the crowding rank is inverted.
-    const crowdingStanding = standingIn(stats?.crowding, crowding, false);
-    const distinctStanding = standingIn(stats?.distinctiveness, distinctiveness, true);
-    const relativeStanding = crowdingStanding === null
-      ? null
-      : distinctStanding === null
-        ? crowdingStanding
-        : 0.62 * crowdingStanding + 0.38 * distinctStanding;
-    const base = relativeStanding === null
-      ? absoluteNovelty(nearestSimilarity)
-      : 100 * relativeStanding;
-    const rawNovelty = clamp(base + 7 * (phrases - 0.5) + 3 * (bridge - 0.35) - penalty);
+  const model = buildNoveltyModel(cleanCandidates, cleanPeers, settings);
+  const groups = groupPeers(cleanPeers);
 
-    const abstractTokens = tokenize(work.abstract || "", 200).length;
-    const textCompleteness = abstractTokens >= 50 ? 1 : abstractTokens ? 0.65 : 0.35;
-    const peerConfidence = Math.min(1, Math.log1p(peers.length) / Math.log1p(60));
-    const noveltyConfidence = peerConfidence * textCompleteness;
-    // Shrink only weakly, and only toward the middle of the calibrated scale;
-    // the old full shrink to 50 is what put a floor under every score.
-    const shrink = 0.25 + 0.75 * noveltyConfidence;
-    const noveltyScore = clamp(50 + shrink * (rawNovelty - 50));
+  // A cache is built per (peer group, candidate month) rather than per candidate:
+  // the expensive parts -- the posting list and the field centroid -- depend only
+  // on which peers are older than the candidate, and that changes by month, not
+  // by paper.
+  // Candidates are grouped by the cache they need and processed a group at a
+  // time, so exactly one cohort cache is alive at once. Retaining every cache for
+  // the whole run -- posting lists, peer vectors and a reference index per
+  // (cohort, month) -- was the single largest allocation in the pass.
+  const plan = new Map();
+  for (const work of cleanCandidates) {
+    const cohort = cohortFor(work, model, groups);
+    const key = `${cohort.key}|${monthOf(work.publicationDate)}`;
+    if (!plan.has(key)) plan.set(key, { cohort, work, members: [] });
+    plan.get(key).members.push(work);
+  }
 
-    const researcher = scoreResearcherAuthorship(work, authorMap);
-    const discoveryScore = clamp(
-      0.72 * Math.max(noveltyScore, researcher.score) +
-        0.28 * Math.min(noveltyScore, researcher.score),
+  const measured = [];
+  const anchorsByCacheKey = new Map();
+  for (const [key, group] of plan) {
+    const sample = group.members[0];
+    const boundary = /^\d{4}-\d{2}/.test(String(sample.publicationDate || "")) ? `${monthOf(sample.publicationDate)}-01` : null;
+    const cache = buildCohortCache(group.cohort.peers, model, boundary);
+    for (const work of group.members) {
+      measured.push({ work, cohort: group.cohort, cacheKey: key, measure: measureCandidate(work, model, group.cohort, cache) });
+    }
+    // The field's own papers, measured exactly as the candidates were, so the
+    // distributions below describe the field rather than only this batch.
+    const anchors = [];
+    const stride = Math.max(1, Math.floor(cache.olderPeers.length / settings.peerAnchorSample));
+    for (let index = 0; index < cache.olderPeers.length && anchors.length < settings.peerAnchorSample; index += stride) {
+      anchors.push(measureCandidate(cache.olderPeers[index], model, group.cohort, cache));
+    }
+    anchorsByCacheKey.set(key, anchors);
+  }
+
+  // Each signal becomes a rank inside its own cohort, so a raw value's units
+  // never matter and no signal can dominate by having a wider range.
+  //
+  // The reference distribution is the field itself, not just this batch. Ranking
+  // a batch only against itself would mean a month in which nothing interesting
+  // was published still produces a paper scoring 99, and a batch of three papers
+  // could not be scored at all. So a sample of peers is measured the same way
+  // the candidates are, and seeds the distribution.
+  const cohortKeys = [...new Set(measured.map((item) => item.cohort.key))];
+  const distributions = new Map();
+  const anchorMeasures = new Map();
+  const shapeDistributions = new Map();
+  for (const key of cohortKeys) {
+    const mine = measured.filter((item) => item.cohort.key === key);
+    // Anchors come from one cache, not from every cache in the cohort. Each cache
+    // has its own cut-off date, so a peer measured against January's history and
+    // the same peer measured against March's are not the same measurement;
+    // pooling them mixed measurement conditions into the reference distribution
+    // and cost 0.04 nDCG and 0.08 Spearman when it was tried. The largest group
+    // is chosen so the reference set is the most representative one available,
+    // and ties break on the key so the choice never depends on iteration order.
+    const anchorKey = [...new Set(mine.map((item) => item.cacheKey))].sort((left, right) => {
+      const bySize = mine.filter((item) => item.cacheKey === right).length - mine.filter((item) => item.cacheKey === left).length;
+      return bySize || left.localeCompare(right);
+    })[0];
+    const anchors = anchorsByCacheKey.get(anchorKey) || [];
+
+    const perSignal = new Map();
+    for (const { key: signal } of NOVELTY_WEIGHTS) {
+      const fromCandidates = mine.map((item) => signalValue(item.measure, signal)).filter(Number.isFinite);
+      // Terminology that is new to the field is zero for every historical paper
+      // by construction, so seeding that one signal with peers would bury the
+      // whole candidate range under a tie at zero.
+      const fromPeers = signal === "emergentDensity" ? [] : anchors.map((measure) => signalValue(measure, signal)).filter(Number.isFinite);
+      const values = [...fromCandidates, ...fromPeers];
+      if (values.length >= 8) perSignal.set(signal, values.sort((left, right) => left - right));
+    }
+    distributions.set(key, perSignal);
+    anchorMeasures.set(key, anchors);
+
+    // The consolidation features are rank-normalised the same way, against the
+    // same pooled candidate-and-peer population, so the fitted coefficients see
+    // the input distribution they were fitted on.
+    const perShape = new Map();
+    for (const [feature] of CONSOLIDATION_SHAPE.terms) {
+      const values = [...mine.map((item) => signalValue(item.measure, feature)), ...anchors.map((measure) => signalValue(measure, feature))]
+        .filter(Number.isFinite);
+      if (values.length >= 8) perShape.set(feature, values.sort((left, right) => left - right));
+    }
+    shapeDistributions.set(key, perShape);
+  }
+
+  const fused = measured.map((item) => ({ ...item, ...fuse(item.measure, distributions.get(item.cohort.key)) }));
+
+  // The fused scale is anchored the same way: a candidate's percentile is taken
+  // against the field's own fused distribution, so a quiet month cannot promote
+  // its least ordinary paper to the top of the range.
+  const fusedByCohort = new Map();
+  for (const key of cohortKeys) {
+    const fromCandidates = fused
+      .filter((item) => item.cohort.key === key && item.fusedValue !== null)
+      .map((item) => item.fusedValue);
+    const fromPeers = (anchorMeasures.get(key) || [])
+      .map((measure) => fuse(measure, distributions.get(key)).fusedValue)
+      .filter((value) => value !== null);
+    fusedByCohort.set(key, [...fromCandidates, ...fromPeers].sort((left, right) => left - right));
+  }
+
+  // Distribution of the consolidation shape itself, pooled over candidates and
+  // the peer anchors, so the penalty is positional rather than absolute.
+  const shapeRanks = new Map();
+  for (const key of cohortKeys) {
+    const shapes = [
+      ...fused.filter((item) => item.cohort.key === key).map((item) => consolidationShapeOf(item.measure, shapeDistributions.get(key) || new Map())),
+      ...(anchorMeasures.get(key) || []).map((measure) => consolidationShapeOf(measure, shapeDistributions.get(key) || new Map())),
+    ].filter((value) => value !== null);
+    shapeRanks.set(key, shapes.sort((left, right) => left - right));
+  }
+
+  const fieldNorms = buildFieldAuthorNorms(cleanCandidates, authorMap);
+
+  const priced = fused.map((item) => {
+    const { work, measure, contributions, fusedValue, availableWeight } = item;
+    const distribution = fusedByCohort.get(item.cohort.key) || [];
+
+    // Calibration. A rank cannot bunch or saturate, which is what the previous
+    // scale did; the small absolute term stops a corpus of uniformly derivative
+    // work from still producing a paper that scores 99.
+    const percentile = distribution.length >= 8 && fusedValue !== null ? rankIn(distribution, fusedValue) : null;
+    const calibrated = percentile !== null
+      ? 0.8 * percentile + 0.2 * fusedValue
+      : fusedValue !== null
+        ? fusedValue
+        : absoluteNovelty(measure.crowding);
+
+    const prior = consolidationPrior(work);
+    const shape = consolidationShapeOf(measure, shapeDistributions.get(item.cohort.key) || new Map());
+    // The logistic output is bunched -- most papers land within a narrow band of
+    // probability -- so the penalty is driven by where a paper sits among its
+    // peers on that scale rather than by the probability itself. Without this the
+    // whole 30-point term collapsed into a 3-point spread.
+    const shapeRank = shape === null ? null : rankIn(shapeRanks.get(item.cohort.key) || [], shape);
+    const structuralPenalty = shapeRank === null ? 0 : settings.structuralConsolidationWeight * shapeRank ** 1.3;
+    const lexicalPenalty = settings.disableLexicalConsolidationPrior ? 0 : LEXICAL_CONSOLIDATION_WEIGHT * prior.strength;
+    const penalty = structuralPenalty + lexicalPenalty;
+
+    // How much of this we can believe. A title-only record with no references and
+    // twelve peers has not earned a confident score in either direction, so it is
+    // pulled toward the middle rather than allowed to top the feed.
+    const evidenceBreadth = Math.min(1, availableWeight / 0.75);
+    const confidence = clamp(
+      measure.textCompleteness * (0.55 + 0.45 * measure.peerConfidence) * (0.7 + 0.3 * evidenceBreadth),
+      0,
+      1,
     );
+    const shrink = 0.35 + 0.65 * confidence;
+    const rawScore = 50 + shrink * (100 * calibrated - 50) - penalty;
+    return { item, measure, contributions, fusedValue, availableWeight, percentile, calibrated, prior, shape, shapeRank, structuralPenalty, lexicalPenalty, penalty, confidence, rawScore };
+  });
+
+  // The scale is re-anchored after the penalties and the confidence shrink, not
+  // before. Applied to an already-calibrated number, those two steps pulled the
+  // whole population toward the middle and left the top and bottom deciles nearly
+  // empty -- the exact bunching this design exists to avoid. Ranking the finished
+  // raw score inside its own cohort restores a usable spread, and keeping a slice
+  // of the raw value stops a corpus of uniformly derivative work from still
+  // producing a paper that scores 99.
+  const rawByCohort = new Map();
+  for (const key of cohortKeys) {
+    rawByCohort.set(
+      key,
+      priced.filter((entry) => entry.item.cohort.key === key).map((entry) => entry.rawScore).sort((left, right) => left - right),
+    );
+  }
+
+  return priced.map((entry) => {
+    const { item, measure, contributions, fusedValue, availableWeight, percentile, calibrated, prior, shape, shapeRank, structuralPenalty, lexicalPenalty, penalty, confidence, rawScore } = entry;
+    const { work } = item;
+    const cohortRaw = rawByCohort.get(item.cohort.key) || [];
+    const finalPercentile = cohortRaw.length >= 8 ? rankIn(cohortRaw, rawScore) : null;
+    const ceiling = duplicateCeiling(Math.max(measure.nearestSemantic, measure.nearestLexical));
+    const spread = finalPercentile === null
+      ? rawScore
+      : 100 * (0.85 * finalPercentile + 0.15 * clamp(rawScore) / 100);
+    const noveltyScore = clamp(Math.min(spread, ceiling));
+    const shrink = 0.35 + 0.65 * confidence;
+
+    const researcher = scoreResearcherAuthorship(work, authorMap, fieldNorms);
+
+    // Ordering among papers that already cleared both admission gates, so this
+    // is a viewing order and not an admission rule. Novelty leads because that is
+    // what the product is for; the max term keeps work that is exceptional on
+    // one axis from being averaged into the middle.
+    //
+    // Measured against forward citations, no blend of these two beats authorship
+    // on its own -- author standing predicts who gets cited, and mixing in
+    // novelty only adds noise to that particular question. Ranking the feed by
+    // predicted citations would make it a prestige list, which is the opposite of
+    // what it is for, so the blend stays novelty-led deliberately. See
+    // eval/experiments/discovery-blend.mjs for the sweep behind that choice.
+    const discoveryScore = clamp(
+      0.55 * noveltyScore + 0.25 * researcher.score + 0.2 * Math.max(noveltyScore, researcher.score),
+    );
+
+    const signed = contributions
+      .map((entry) => ({
+        ...entry,
+        // What this signal actually did to the final number, in points, signed.
+        points: Number((shrink * 100 * (entry.weight / Math.max(1e-9, availableWeight)) * (entry.rank - 0.5)).toFixed(2)),
+      }))
+      .sort((left, right) => Math.abs(right.points) - Math.abs(left.points));
+
     return {
       ...work,
       noveltyScore,
-      noveltyConfidence,
+      noveltyConfidence: confidence,
       researcherScore: researcher.score,
       researcherConfidence: researcher.confidence,
       discoveryScore,
-      nearestWorkId: nearest?.id || null,
-      nearestTitle: nearest?.title || null,
-      nearestSimilarity,
+      nearestWorkId: measure.nearestPeer?.id || null,
+      nearestTitle: measure.nearestPeer?.title || null,
+      nearestSimilarity: measure.nearestSemantic,
       noveltyEvidence: {
-        peerCount: peers.length,
-        semanticDistance,
-        crowding,
-        fieldCrowding: stats ? stats.crowding.center : null,
-        distinctiveness,
-        fieldDistinctiveness: stats?.distinctiveness ? stats.distinctiveness.center : null,
-        crowdingStanding,
-        distinctStanding,
-        relativeStanding,
-        consolidation,
-        calibrated: Boolean(stats),
-        phraseRarity: phrases,
-        bridgeRarity: bridge,
-        incrementalMarkers: markers,
-        penalty,
-        textCompleteness,
+        peerCount: measure.peerCount,
+        comparedAgainst: item.cohort.key,
+        crowding: measure.crowding,
+        nearestSemanticSimilarity: measure.nearestSemantic,
+        nearestLexicalSimilarity: measure.nearestLexical,
+        centrality: measure.centrality,
+        emergentTermCount: measure.emergentTermCount,
+        emergentTerms: measure.emergentTerms,
+        emergentDensity: measure.emergentDensity,
+        referenceCount: measure.combination?.referenceCount ?? 0,
+        referencePairsExamined: measure.combination?.pairs ?? 0,
+        unseenPairFraction: measure.combination?.unseenPairFraction ?? null,
+        pairSupport: measure.combination?.pairSupport ?? null,
+        canonShare: measure.combination?.canonShare ?? null,
+        unfamiliarReferenceFraction: measure.combination?.unfamiliarReferenceFraction ?? null,
+        strongestCoupling: measure.coupling?.strongestCoupling ?? null,
+        coupledPeerFraction: measure.coupling?.coupledPeerFraction ?? null,
+        teamSize: measure.teamSize,
+        genericness: Number((measure.genericness ?? 0).toFixed(4)),
+        topicConcentration: measure.topicConcentration,
+        fusedValue,
+        cohortPercentile: percentile,
+        finalPercentile,
+        rawScore: Number(rawScore.toFixed(2)),
+        calibratedValue: calibrated,
+        // Whether the field could be characterised at all. False means the score
+        // came from the fixed fallback curve, not from a position in the field.
+        calibrated: percentile !== null,
+        confidence,
+        textCompleteness: measure.textCompleteness,
+        consolidationPrior: prior.strength,
+        consolidationShape: shape === null ? null : Number(shape.toFixed(4)),
+        consolidationShapeRank: shapeRank === null ? null : Number(shapeRank.toFixed(4)),
+        consolidationPenaltyPoints: Number((-penalty).toFixed(2)),
+        structuralConsolidationPoints: Number((-structuralPenalty).toFixed(2)),
+        lexicalConsolidationPoints: Number((-lexicalPenalty).toFixed(2)),
+        duplicateCeiling: ceiling < 100 ? Number(ceiling.toFixed(2)) : null,
+        lexicalConsolidationPriorDisabled: Boolean(settings.disableLexicalConsolidationPrior),
+        incrementalMarkers: prior.markers,
+        signalContributions: signed,
+        evidenceCoverage: Number(availableWeight.toFixed(3)),
       },
       researcherEvidence: researcher.evidence,
+      researcherFieldNormalised: researcher.fieldNormalised,
       scoringVersion: SCORING_VERSION,
       scoredAt: new Date().toISOString(),
     };
   });
 }
+
+// Corpus-free lexical primitives, re-exported so callers and tests have one
+// place to reach them.
+export { contentTerms, textOf, tokenize, buildLexicon, bm25Weights, cosineOfWeighted };

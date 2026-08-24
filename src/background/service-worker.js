@@ -24,6 +24,8 @@ import {
   matchesResearchFilters,
   discoveryScopeSignature,
   interestMatchEvidence,
+  buildRelevanceIndex,
+  bestRelevance,
   researchFilterSignature,
   selectionFromSettings,
 } from "../shared/filters.js";
@@ -798,16 +800,31 @@ async function feedContext(settings) {
   };
 }
 
-// Interests no longer exclude anything, so they steer order instead: a paper
-// matching a stated interest outranks an equally-scored one that does not.
+// Interests no longer exclude anything, so they steer order instead. This used
+// to be a boolean -- every paper mentioning the phrase ranked equally -- which
+// is why searching "RAG" put Tagalog relative-clause processing above every
+// retrieval-augmented generation paper in the index. Relevance is now graded,
+// and one index is built for the whole window rather than per paper, because
+// BM25 needs corpus-wide term statistics.
 function interestRanked(works, settings) {
   const queries = (settings.queries || []).filter(Boolean);
   if (!queries.length) return works;
-  return works.map((work) => ({
-    ...work,
-    interestMatch: interestMatchEvidence(work, queries),
-  }));
+  const index = buildRelevanceIndex(works);
+  return works.map((work) => {
+    const relevance = bestRelevance(work, queries, index);
+    return {
+      ...work,
+      interestMatch: interestMatchEvidence(work, queries),
+      relevanceScore: relevance?.score || 0,
+      relevanceEvidence: relevance,
+    };
+  });
 }
+
+// How much clearer one paper's relevance has to be before it outranks the
+// chosen sort order. Without a band, a one-point relevance difference would
+// silently override the novelty ordering the user actually selected.
+const RELEVANCE_DECIDES_ABOVE = 8;
 
 function windowSlice(context, settings, { window, sort, includeAll, offset, limit }) {
   const windowConfig = WINDOWS[window] || WINDOWS.week;
@@ -818,8 +835,9 @@ function windowSlice(context, settings, { window, sort, includeAll, offset, limi
   const ranked = interestRanked(selected.works, settings);
   const base = SORTERS[sort] || SORTERS.balanced;
   ranked.sort((left, right) => {
-    const weight = Number(Boolean(right.interestMatch)) - Number(Boolean(left.interestMatch));
-    return weight || base(left, right);
+    const delta = (right.relevanceScore || 0) - (left.relevanceScore || 0);
+    if (Math.abs(delta) >= RELEVANCE_DECIDES_ABOVE) return delta;
+    return base(left, right);
   });
   selected.works = ranked;
   const safeOffset = Math.max(0, Number(offset) || 0);

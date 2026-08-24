@@ -1,0 +1,50 @@
+{
+  "generatedAt": "2026-08-24T00:56:58.680Z",
+  "sample": 120,
+  "probes": {
+    "junk_tokens": {
+      "mean_delta": -0.18,
+      "p95_delta": 3.14,
+      "threshold": 3,
+      "pass": true
+    },
+    "coordinated_vocabulary": {
+      "mean_delta": 12.02,
+      "threshold": 25,
+      "pass": true,
+      "note": "Expected to move the score. Bounded, not zero."
+    },
+    "paraphrase_invariance": {
+      "mean_abs_delta": 2.62,
+      "p95_abs_delta": 13.54,
+      "threshold": 8,
+      "pass": true
+    },
+    "true_duplicates": {
+      "clones": 60,
+      "median_clone_score": 4,
+      "corpus_p10": 10.54,
+      "fraction_in_bottom_decile": 1,
+      "threshold": 0.8,
+      "pass": true
+    },
+    "consolidation": {
+      "reviews": 246,
+      "median_gap_points": 23.67,
+      "auc_with_keywords": 0.6955,
+      "auc_without_keywords": 0.6525,
+      "auc_drop": 0.043,
+      "pass": true
+    },
+    "thin_records": {
+      "thin_count": 638,
+      "thin_mean": 41.92,
+      "full_mean": 53.61,
+      "excess": -11.69,
+      "threshold": 4,
+      "pass": true
+    }
+  },
+  "passed": 6,
+  "total": 6
+}

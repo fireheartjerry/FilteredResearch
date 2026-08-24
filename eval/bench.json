@@ -1,0 +1,25 @@
+{
+  "generatedAt": "2026-08-24T01:10:11.788Z",
+  "candidates": 10000,
+  "peers": 3200,
+  "results": [
+    {
+      "name": "v1.0.1 baseline",
+      "wallClockMs": 14004,
+      "msPerThousand": 1400,
+      "peakRssMb": 272,
+      "deltaRssMb": 120,
+      "scored": 10000
+    },
+    {
+      "name": "current",
+      "wallClockMs": 16849,
+      "msPerThousand": 1685,
+      "peakRssMb": 636,
+      "deltaRssMb": 372,
+      "scored": 10000
+    }
+  ],
+  "ratio": 1.203,
+  "memoryRatio": 2.338
+}

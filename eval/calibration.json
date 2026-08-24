@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-08-24T00:55:44.284Z",
+  "cells": 12,
+  "fields": 4,
+  "windows": 3,
+  "decile_occupancy": [
+    0.069,
+    0.095,
+    0.099,
+    0.105,
+    0.109,
+    0.114,
+    0.11,
+    0.111,
+    0.101,
+    0.086
+  ],
+  "occupancy_ok": true,
+  "mean_drift_points": 2.94,
+  "sigma_ratio": 1.076,
+  "drift_ok": true,
+  "corpus_doubling_mean_shift": 5.85,
+  "size_ok": false,
+  "resample_rank_spearman": 0.9889,
+  "stability_ok": true,
+  "per_cell": [
+    {
+      "field": "17",
+      "window": "2021Q1",
+      "n": 239,
+      "mean": 50.4,
+      "sd": 27.67
+    },
+    {
+      "field": "17",
+      "window": "2021Q2",
+      "n": 170,
+      "mean": 51.38,
+      "sd": 27.6
+    },
+    {
+      "field": "17",
+      "window": "2021Q3",
+      "n": 170,
+      "mean": 52.51,
+      "sd": 27.36
+    },
+    {
+      "field": "27",
+      "window": "2021Q1",
+      "n": 223,
+      "mean": 49.95,
+      "sd": 27.5
+    },
+    {
+      "field": "27",
+      "window": "2021Q2",
+      "n": 170,
+      "mean": 51.23,
+      "sd": 26.25
+    },
+    {
+      "field": "27",
+      "window": "2021Q3",
+      "n": 170,
+      "mean": 52.89,
+      "sd": 25.71
+    },
+    {
+      "field": "31",
+      "window": "2021Q1",
+      "n": 205,
+      "mean": 51.31,
+      "sd": 27.48
+    },
+    {
+      "field": "31",
+      "window": "2021Q2",
+      "n": 170,
+      "mean": 51.52,
+      "sd": 27.47
+    },
+    {
+      "field": "31",
+      "window": "2021Q3",
+      "n": 170,
+      "mean": 52.01,
+      "sd": 27.07
+    },
+    {
+      "field": "25",
+      "window": "2021Q1",
+      "n": 240,
+      "mean": 50.44,
+      "sd": 27.42
+    },
+    {
+      "field": "25",
+      "window": "2021Q2",
+      "n": 170,
+      "mean": 52.03,
+      "sd": 27.34
+    },
+    {
+      "field": "25",
+      "window": "2021Q3",
+      "n": 170,
+      "mean": 51.71,
+      "sd": 27.15
+    }
+  ],
+  "passed": 3
+}

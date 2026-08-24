@@ -2,7 +2,7 @@
 
 ## Product contract
 
-Filtered Research is an open-source, local-first Chrome extension for finding recent papers that are both lexically unusual within their field and associated with an established authorship track record. It is not a publisher crawler, paper archive, citation recommender, peer-review substitute, or AI research product.
+Filtered Research is an open-source, local-first Chrome extension for finding recent papers that are both unusual within their field -- judged from the reference graph, the text and the shape of the work -- and associated with an established authorship track record. It is not a publisher crawler, paper archive, citation recommender, peer-review substitute, or AI research product.
 
 The primary user chooses an OpenAlex field/subfield and an index depth in the sidebar. Depth options are 1 day and 3 days (Light), 1 week and 2 weeks (Moderate), and 1 month and 3 months (Intensive). Three months is the ceiling: deeper passes retrieved far more works than the scoring stage could keep up with, which made discovery unusably slow. Preferences are local-only. Discovery starts through an explicit user refresh, or on the automatic interval the user chooses.
 
@@ -39,13 +39,43 @@ The primary user chooses an OpenAlex field/subfield and an index depth in the si
 
 ### Ranking
 
-- Score novelty against up to 320 older, subfield-adjacent references using the documented TF-IDF/cosine heuristic. Similarity is computed through a per-group term index rather than exhaustive pairwise comparison, and must produce results identical to the pairwise method.
-- Express novelty relative to the field's own crowding rather than as an absolute distance. A paper's nearest-peer similarity and neighbourhood density are compared with the same statistic measured across the field, then mapped through a logistic curve so the score occupies the full 1-100 range instead of bunching near the top.
-- Fall back to a fixed calibration curve when a field has too few peers to describe a distribution.
-- Treat a change of scoring version as invalidating stored scores; a refresh rescores saved papers so one calibration applies across the feed.
-- Score authorship from transparent OpenAlex author metrics and role.
-- Convert selectivity 1–100 into logarithmic target top-fractions using the documented anchors.
+- Score novelty from eleven signals over the reference graph, the text and the
+  paper's own shape, each ranked inside the paper's field cohort before being
+  combined. Only signals the record has evidence for are combined and the weights
+  are renormalised over those, so a record without a reference list is scored on
+  what it has rather than imputed to the middle.
+- Fit the fusion weights, the consolidation coefficients and the discovery blend
+  on a tuning split that is disjoint from every reported number, and ship them as
+  constants. No fitting happens on the user's machine.
+- Compare text two ways and take the stronger as evidence that the work already
+  exists: a semantic space built from the corpus's own word co-occurrence with the
+  corpus mean projected out, and BM25 over unigrams and bigrams.
+- Never let a term seen in only one or two documents carry the score, so typos,
+  OCR debris and injected vocabulary cannot buy novelty.
+- Cap novelty by nearest-neighbour text similarity, so a near-verbatim
+  restatement of existing work scores at the bottom whatever its bibliography
+  looks like.
+- Detect consolidation work structurally rather than by keyword. A keyword list
+  remains as a small prior for records with no reference list, and the test suite
+  verifies that removing it barely changes the separation.
+- Express novelty as a rank within the paper's own field, pooled with a sample of
+  that field's own papers measured identically, so a quiet month cannot promote
+  its least ordinary paper to the top of the range. Apply that ranking after the
+  penalties and the confidence shrink, not before.
+- Fall back to a fixed calibration curve when a field has too few peers to
+  describe a distribution.
+- Treat a change of scoring version as invalidating stored scores; a refresh
+  rescores saved papers so one calibration applies across the feed.
+- Score authorship from transparent OpenAlex author metrics and role, normalised
+  within the paper's field so one slider position means the same thing across the
+  taxonomy.
+- Rank results by graded relevance to the user's interest phrases, not by a
+  boolean match. Interests still never exclude a paper when a category is chosen.
+- Convert selectivity 1-100 into logarithmic target top-fractions using the
+  documented anchors.
 - Apply novelty and authorship percentile cutoffs with AND.
+- Produce identical scores for identical input on any machine, regardless of the
+  order records arrive in.
 - Show both raw scores and evidence. Never label either as truth, quality, reputation, peer review, or proven novelty.
 
 ### Interface

@@ -1,4 +1,3 @@
-import { ACRONYM_GLOSSARY, rankByRelevance, buildRelevanceIndex, relevanceEvidenceFor, bestRelevance } from "./relevance.js";
 const LEGACY_CATEGORY_SELECTIONS = Object.freeze({
   ai: { subfieldIds: ["1702"] },
   "computer-science": { fieldIds: ["17"] },
@@ -91,7 +90,47 @@ function containsPhrase(documentTokens, queryTokens) {
 // perfectly relevant literature is invisible to the query.
 const STOP_INITIALS = new Set(["of", "the", "and", "for", "a", "an", "in", "on", "to", "with"]);
 
-
+// Abbreviations researchers actually type. A known acronym resolves to its
+// established meaning rather than to any phrase whose initials happen to line
+// up, so "RAG" finds retrieval-augmented generation and not "robust adaptive
+// gradient". Unknown abbreviations still fall back to initial matching.
+const ACRONYM_GLOSSARY = Object.freeze({
+  rag: ["retrieval augmented generation", "retrieval augmented generative"],
+  llm: ["large language model", "large language models"],
+  llms: ["large language models"],
+  nlp: ["natural language processing"],
+  cv: ["computer vision"],
+  rl: ["reinforcement learning"],
+  rlhf: ["reinforcement learning from human feedback"],
+  gan: ["generative adversarial network", "generative adversarial networks"],
+  cnn: ["convolutional neural network", "convolutional neural networks"],
+  rnn: ["recurrent neural network", "recurrent neural networks"],
+  gnn: ["graph neural network", "graph neural networks"],
+  vlm: ["vision language model", "vision language models"],
+  moe: ["mixture of experts"],
+  sae: ["sparse autoencoder", "sparse autoencoders"],
+  peft: ["parameter efficient fine tuning"],
+  lora: ["low rank adaptation"],
+  sft: ["supervised fine tuning"],
+  dpo: ["direct preference optimization"],
+  mcts: ["monte carlo tree search"],
+  ssl: ["self supervised learning"],
+  ood: ["out of distribution"],
+  qa: ["question answering"],
+  asr: ["automatic speech recognition"],
+  tts: ["text to speech"],
+  ocr: ["optical character recognition"],
+  slam: ["simultaneous localization and mapping"],
+  mpc: ["model predictive control"],
+  pde: ["partial differential equation", "partial differential equations"],
+  dft: ["density functional theory"],
+  mri: ["magnetic resonance imaging"],
+  ai: ["artificial intelligence"],
+  agi: ["artificial general intelligence"],
+  hci: ["human computer interaction"],
+  iot: ["internet of things"],
+  api: ["application programming interface"],
+});
 
 function isAcronymCandidate(token) {
   return /^[a-z]{2,6}$/.test(token);
@@ -239,17 +278,4 @@ export function discoveryScopeSignature(settings = {}) {
 export function researchFilterSignature(settings = {}) {
   if (!settings || typeof settings !== "object") settings = {};
   return JSON.stringify({ scope: JSON.parse(discoveryScopeSignature(settings)), arxivGroups: [...(settings.selectedArxivGroups || [])].sort(), arxivCategories: [...(settings.selectedArxivCategories || [])].sort(), queries: (settings.queries || []).map(normalizeSearchText).filter(Boolean).sort() });
-}
-
-// Interest phrases rank results as well as matching them. The boolean above
-// decides admission; these decide order, which is what SPEC.md has always said
-// interests do.
-export { rankByRelevance, buildRelevanceIndex, bestRelevance, ACRONYM_GLOSSARY };
-
-// Graded relevance of one paper to one phrase. A corpus is needed for the term
-// statistics, so callers ranking a whole feed should build one index with
-// buildRelevanceIndex and reuse it rather than calling this per paper.
-export function relevanceScore(work, query, index = null) {
-  const scope = index || buildRelevanceIndex([work]);
-  return relevanceEvidenceFor(work, query, scope).score;
 }

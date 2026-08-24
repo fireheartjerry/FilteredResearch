@@ -1,0 +1,187 @@
+{
+  "generatedAt": "2026-08-24T00:53:45.538Z",
+  "split": "tune",
+  "papers": 919,
+  "labelled": 400,
+  "currentWeights": [
+    {
+      "key": "pairSupport",
+      "weight": 0.26,
+      "invert": true,
+      "label": "sources rarely cited together"
+    },
+    {
+      "key": "canonShare",
+      "weight": 0.26,
+      "invert": true,
+      "label": "not built on the standard canon"
+    },
+    {
+      "key": "emergentDensity",
+      "weight": 0.11,
+      "invert": false,
+      "label": "introduces new terminology"
+    },
+    {
+      "key": "referenceCount",
+      "weight": 0.11,
+      "invert": true,
+      "label": "not a broad survey"
+    },
+    {
+      "key": "unseenPairFraction",
+      "weight": 0.08,
+      "invert": false,
+      "label": "joins sources nobody has joined"
+    },
+    {
+      "key": "unfamiliarReferenceFraction",
+      "weight": 0.08,
+      "invert": false,
+      "label": "draws on outside literature"
+    },
+    {
+      "key": "strongestCoupling",
+      "weight": 0.04,
+      "invert": true,
+      "label": "no shared bibliography with existing work"
+    },
+    {
+      "key": "coupledPeerFraction",
+      "weight": 0.03,
+      "invert": true,
+      "label": "few papers share its sources"
+    },
+    {
+      "key": "crowding",
+      "weight": 0.02,
+      "invert": true,
+      "label": "unlike existing work"
+    },
+    {
+      "key": "genericness",
+      "weight": 0.02,
+      "invert": true,
+      "label": "not a generic restatement of the field"
+    },
+    {
+      "key": "topicConcentration",
+      "weight": 0.01,
+      "invert": false,
+      "label": "focused on one topic"
+    }
+  ],
+  "perSignal": [
+    {
+      "signal": "crowding",
+      "invert": true,
+      "n": 400,
+      "spearman": -0.0998,
+      "auc": 0.3883,
+      "reviewGap": -0.00639
+    },
+    {
+      "signal": "centrality",
+      "invert": true,
+      "n": 400,
+      "spearman": -0.0397,
+      "auc": 0.373,
+      "reviewGap": -0.04387
+    },
+    {
+      "signal": "emergentDensity",
+      "invert": false,
+      "n": 400,
+      "spearman": 0.103,
+      "auc": 0.5538,
+      "reviewGap": 0.00147
+    },
+    {
+      "signal": "unseenPairFraction",
+      "invert": false,
+      "n": 400,
+      "spearman": 0.2237,
+      "auc": 0.574,
+      "reviewGap": -0.00071
+    },
+    {
+      "signal": "pairSupport",
+      "invert": true,
+      "n": 400,
+      "spearman": 0.194,
+      "auc": 0.5911,
+      "reviewGap": -0.00087
+    },
+    {
+      "signal": "canonShare",
+      "invert": true,
+      "n": 400,
+      "spearman": 0.1785,
+      "auc": 0.6534,
+      "reviewGap": -0.00111
+    },
+    {
+      "signal": "unfamiliarReferenceFraction",
+      "invert": false,
+      "n": 400,
+      "spearman": 0.1633,
+      "auc": 0.5941,
+      "reviewGap": -0.01482
+    },
+    {
+      "signal": "referenceCount",
+      "invert": true,
+      "n": 400,
+      "spearman": 0.0832,
+      "auc": 0.5504,
+      "reviewGap": 7.66482
+    },
+    {
+      "signal": "strongestCoupling",
+      "invert": true,
+      "n": 400,
+      "spearman": 0.1009,
+      "auc": 0.5599,
+      "reviewGap": -0.00025
+    },
+    {
+      "signal": "coupledPeerFraction",
+      "invert": true,
+      "n": 400,
+      "spearman": 0.1171,
+      "auc": 0.5772,
+      "reviewGap": 0.00121
+    },
+    {
+      "signal": "teamSize",
+      "invert": true,
+      "n": 400,
+      "spearman": 0.027,
+      "auc": 0.4149,
+      "reviewGap": -0.80895
+    }
+  ],
+  "bestDiscoveryBlend": {
+    "novelty": 0,
+    "ndcg": 0.3218
+  },
+  "fittedWeights": {
+    "pairSupport": 0.29,
+    "canonShare": 0.188,
+    "emergentDensity": 0.058,
+    "referenceCount": 0.116,
+    "unseenPairFraction": 0.232,
+    "unfamiliarReferenceFraction": 0.058,
+    "strongestCoupling": 0.014,
+    "coupledPeerFraction": 0,
+    "crowding": 0,
+    "genericness": 0.036,
+    "topicConcentration": 0.007
+  },
+  "fittedObjective": {
+    "ndcg": 0.4798,
+    "auc": 0.7518,
+    "objective": 0.6158
+  },
+  "note": "Fitted on the tuning split only. Reported metrics always come from the disjoint test split."
+}

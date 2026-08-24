@@ -8,3 +8,7 @@ outputs/
 
 # Chrome Web Store upload archive
 FilteredResearch-web-store.zip
+node_modules/
+dist/
+eval/fixtures/works-stage.json.gz
+eval/*.log
