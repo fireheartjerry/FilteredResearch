@@ -483,6 +483,13 @@ export function scoreBatch(candidates, references, authors, options = {}) {
     // How much of this we can believe. A title-only record with no references and
     // twelve peers has not earned a confident score in either direction, so it is
     // pulled toward the middle rather than allowed to top the feed.
+    // Records with few available signals are pulled toward the middle. Two
+    // stronger versions of this were tried -- a steeper breadth term, and making
+    // the final re-rank itself confidence-weighted -- because on a record with no
+    // reference list terminology carries about eighty per cent of the fused
+    // weight, and a paraphrase can then move the score by tens of points. Neither
+    // moved the p95 of that tail at all, and both cost accuracy, so the simpler
+    // form stands and the tail is reported instead of papered over.
     const evidenceBreadth = Math.min(1, availableWeight / 0.75);
     const confidence = clamp(
       measure.textCompleteness * (0.55 + 0.45 * measure.peerConfidence) * (0.7 + 0.3 * evidenceBreadth),

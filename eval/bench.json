@@ -1,25 +1,25 @@
 {
-  "generatedAt": "2026-08-24T03:12:38.642Z",
+  "generatedAt": "2026-08-24T03:40:40.478Z",
   "candidates": 10000,
   "peers": 3200,
   "results": [
     {
       "name": "v1.0.1 baseline",
-      "wallClockMs": 12675,
-      "msPerThousand": 1267,
-      "peakRssMb": 272,
-      "deltaRssMb": 120,
+      "wallClockMs": 9661,
+      "msPerThousand": 966,
+      "peakRssMb": 273,
+      "deltaRssMb": 123,
       "scored": 10000
     },
     {
       "name": "current",
-      "wallClockMs": 13451,
-      "msPerThousand": 1345,
-      "peakRssMb": 562,
-      "deltaRssMb": 298,
+      "wallClockMs": 10864,
+      "msPerThousand": 1086,
+      "peakRssMb": 697,
+      "deltaRssMb": 428,
       "scored": 10000
     }
   ],
-  "ratio": 1.061,
-  "memoryRatio": 2.066
+  "ratio": 1.125,
+  "memoryRatio": 2.553
 }
