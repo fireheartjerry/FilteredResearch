@@ -354,29 +354,56 @@ export function groupPeers(peers) {
 // a full semantic comparison; comparing against every peer in a large field
 // would dominate the runtime for no gain, since almost all of them share nothing
 // with the candidate.
+// Compressed sparse row rather than a Map of arrays. The Map form allocated one
+// JavaScript array per distinct term -- around 150,000 of them for a full-sized
+// cohort, each with its own header and growth slack -- and that was the largest
+// single allocation in a scoring pass. Two typed arrays and an offset table hold
+// the same information with no per-term object at all.
 export function buildPostings(peerLexical) {
-  const postings = new Map();
+  const counts = new Map();
+  let total = 0;
+  for (const entry of peerLexical) {
+    if (!entry?.ids) continue;
+    for (let position = 0; position < entry.ids.length; position += 1) {
+      counts.set(entry.ids[position], (counts.get(entry.ids[position]) || 0) + 1);
+      total += 1;
+    }
+  }
+  const offsets = new Map();
+  let cursor = 0;
+  for (const [id, count] of counts) {
+    offsets.set(id, cursor);
+    cursor += count;
+  }
+  const peerIndex = new Int32Array(total);
+  const weight = new Float32Array(total);
+  const filled = new Map();
   for (let index = 0; index < peerLexical.length; index += 1) {
     const entry = peerLexical[index];
     if (!entry?.ids) continue;
     for (let position = 0; position < entry.ids.length; position += 1) {
       const id = entry.ids[position];
-      let list = postings.get(id);
-      if (!list) postings.set(id, (list = []));
-      list.push(index, entry.weights[position]);
+      const slot = offsets.get(id) + (filled.get(id) || 0);
+      filled.set(id, (filled.get(id) || 0) + 1);
+      peerIndex[slot] = index;
+      weight[slot] = entry.weights[position];
     }
   }
-  return postings;
+  return { offsets, counts, peerIndex, weight };
 }
 
 function shortlist(candidateLexical, cohortPeers, peerLexical, postings, limit) {
   if (cohortPeers.length <= limit) return cohortPeers.map((_, index) => index);
   const dots = new Float64Array(cohortPeers.length);
   for (let entry = 0; entry < candidateLexical.ids.length; entry += 1) {
-    const list = postings.get(candidateLexical.ids[entry]);
-    if (!list) continue;
+    const id = candidateLexical.ids[entry];
+    const start = postings.offsets.get(id);
+    if (start === undefined) continue;
+    const end = start + postings.counts.get(id);
     const weight = candidateLexical.weights[entry];
-    for (let position = 0; position < list.length; position += 2) dots[list[position]] += weight * list[position + 1];
+    for (let position = start; position < end; position += 1) {
+      dots[postings.peerIndex[position]] += weight * postings.weight[position];
+    }
   }
   const scored = [];
   for (let index = 0; index < cohortPeers.length; index += 1) scored.push([dots[index], index]);

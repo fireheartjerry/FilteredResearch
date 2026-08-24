@@ -1,72 +1,66 @@
 {
-  "generatedAt": "2026-08-24T01:36:04.276Z",
+  "generatedAt": "2026-08-24T02:28:32.550Z",
   "split": "tune",
   "papers": 919,
   "labelled": 400,
   "currentWeights": [
     {
-      "key": "pairSupport",
-      "weight": 0.24,
-      "invert": true,
-      "label": "sources rarely cited together"
-    },
-    {
-      "key": "unseenPairFraction",
-      "weight": 0.2,
-      "invert": false,
-      "label": "joins sources nobody has joined"
-    },
-    {
-      "key": "canonShare",
-      "weight": 0.17,
-      "invert": true,
-      "label": "not built on the standard canon"
-    },
-    {
       "key": "referenceCount",
-      "weight": 0.11,
+      "weight": 0.232,
       "invert": true,
       "label": "not a broad survey"
     },
     {
-      "key": "unfamiliarReferenceFraction",
-      "weight": 0.08,
-      "invert": false,
-      "label": "draws on outside literature"
-    },
-    {
       "key": "emergentDensity",
-      "weight": 0.07,
+      "weight": 0.196,
       "invert": false,
       "label": "introduces new terminology"
     },
     {
+      "key": "canonShare",
+      "weight": 0.142,
+      "invert": true,
+      "label": "not built on the standard canon"
+    },
+    {
+      "key": "pairSupport",
+      "weight": 0.108,
+      "invert": true,
+      "label": "sources rarely cited together"
+    },
+    {
+      "key": "unfamiliarReferenceFraction",
+      "weight": 0.088,
+      "invert": false,
+      "label": "draws on outside literature"
+    },
+    {
+      "key": "unseenPairFraction",
+      "weight": 0.075,
+      "invert": false,
+      "label": "joins sources nobody has joined"
+    },
+    {
       "key": "strongestCoupling",
-      "weight": 0.04,
+      "weight": 0.062,
       "invert": true,
       "label": "no shared bibliography with existing work"
     },
     {
-      "key": "genericness",
-      "weight": 0.04,
-      "invert": true,
-      "label": "not a generic restatement of the field"
-    },
-    {
       "key": "coupledPeerFraction",
-      "weight": 0.02,
+      "weight": 0.053,
       "invert": true,
       "label": "few papers share its sources"
     },
     {
-      "key": "crowding",
-      "weight": 0.02,
+      "key": "genericness",
+      "weight": 0.036,
       "invert": true,
-      "label": "unlike existing work"
+      "label": "not a generic restatement of the field"
     },
     {
       "key": "topicConcentration",
-      "weight": 0.01,
+      "weight": 0.009,
       "invert": false,
       "label": "focused on one topic"
     }
@@ -76,112 +70,111 @@
       "signal": "crowding",
       "invert": true,
       "n": 400,
-      "spearman": -0.1446,
-      "auc": 0.3912,
+      "spearman": -0.1368,
+      "auc": 0.3922,
       "reviewGap": -0.00045
     },
     {
       "signal": "centrality",
       "invert": true,
       "n": 400,
-      "spearman": -0.0607,
-      "auc": 0.3631,
+      "spearman": -0.0484,
+      "auc": 0.3696,
       "reviewGap": -0.04144
     },
     {
       "signal": "emergentDensity",
       "invert": false,
       "n": 400,
-      "spearman": 0.103,
-      "auc": 0.5538,
+      "spearman": 0.1083,
+      "auc": 0.5606,
       "reviewGap": 0.00147
     },
     {
       "signal": "unseenPairFraction",
       "invert": false,
       "n": 400,
-      "spearman": 0.1473,
-      "auc": 0.5367,
+      "spearman": 0.1409,
+      "auc": 0.5392,
       "reviewGap": -0.00053
     },
     {
       "signal": "pairSupport",
       "invert": true,
       "n": 400,
-      "spearman": -0.0019,
-      "auc": 0.5344,
+      "spearman": -0.0065,
+      "auc": 0.529,
       "reviewGap": -0.00012
     },
     {
       "signal": "canonShare",
       "invert": true,
       "n": 400,
-      "spearman": 0.1683,
-      "auc": 0.5764,
+      "spearman": 0.1594,
+      "auc": 0.5869,
       "reviewGap": -0.00776
     },
     {
       "signal": "unfamiliarReferenceFraction",
       "invert": false,
       "n": 400,
-      "spearman": 0.1514,
-      "auc": 0.5557,
+      "spearman": 0.1484,
+      "auc": 0.5605,
       "reviewGap": -0.02261
     },
     {
       "signal": "referenceCount",
       "invert": true,
       "n": 400,
-      "spearman": 0.0832,
-      "auc": 0.5504,
+      "spearman": 0.078,
+      "auc": 0.5545,
       "reviewGap": 7.66482
     },
     {
       "signal": "strongestCoupling",
       "invert": true,
       "n": 400,
-      "spearman": 0.1009,
-      "auc": 0.5599,
+      "spearman": 0.0948,
+      "auc": 0.5644,
       "reviewGap": -0.00025
     },
     {
       "signal": "coupledPeerFraction",
       "invert": true,
       "n": 400,
-      "spearman": 0.1171,
-      "auc": 0.5772,
+      "spearman": 0.1099,
+      "auc": 0.5811,
       "reviewGap": 0.00121
     },
     {
       "signal": "teamSize",
       "invert": true,
       "n": 400,
-      "spearman": 0.027,
-      "auc": 0.4149,
+      "spearman": 0.0382,
+      "auc": 0.4084,
       "reviewGap": -0.80895
     }
   ],
   "bestDiscoveryBlend": {
     "novelty": 0,
-    "ndcg": 0.3218
+    "ndcg": 0.3377
   },
   "fittedWeights": {
-    "pairSupport": 0.108,
-    "unseenPairFraction": 0.075,
-    "canonShare": 0.142,
-    "referenceCount": 0.232,
-    "unfamiliarReferenceFraction": 0.088,
-    "emergentDensity": 0.196,
-    "strongestCoupling": 0.062,
-    "genericness": 0.036,
-    "coupledPeerFraction": 0.053,
-    "crowding": 0,
-    "topicConcentration": 0.009
+    "referenceCount": 0.229,
+    "emergentDensity": 0.229,
+    "canonShare": 0.064,
+    "pairSupport": 0.011,
+    "unfamiliarReferenceFraction": 0.053,
+    "unseenPairFraction": 0.229,
+    "strongestCoupling": 0.087,
+    "coupledPeerFraction": 0.08,
+    "genericness": 0.02,
+    "topicConcentration": 0
   },
   "fittedObjective": {
-    "ndcg": 0.4753,
-    "auc": 0.6975,
-    "objective": 0.5864
+    "ndcg": 0.4837,
+    "auc": 0.7041,
+    "objective": 0.5939
   },
   "note": "Fitted on the tuning split only. Reported metrics always come from the disjoint test split."
 }

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-24T02:14:13.813Z",
+  "generatedAt": "2026-08-24T02:31:02.697Z",
   "split": "test",
   "corpus": {
     "candidates": 2267,
@@ -189,7 +189,7 @@
       ]
     }
   ],
-  "scoringMs": 10758,
+  "scoringMs": 9574,
   "baseline": {
     "novelty": {
       "evaluated": 626,
@@ -365,7 +365,7 @@
         ]
       }
     ],
-    "scoringMs": 4125
+    "scoringMs": 3429
   },
   "llmBaseline": {
     "papers": 300,

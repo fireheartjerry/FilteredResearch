@@ -113,12 +113,16 @@ function main() {
     };
     const ordered = [...labelled].sort((left, right) => score(right) - score(left));
     const ndcg = ndcgAt(ordered, noveltyGain, 50);
+    // Pooled negatives, reviews included. Fitting against derivative articles
+    // alone is the more principled objective -- it is the question the fusion
+    // actually exists to answer -- and it was tried: it reached AUC 0.704 on this
+    // split and then LOST 0.018 on the held-out one, because dropping reviews
+    // leaves only ~160 negatives and the estimate becomes noise the search fits.
+    // Pooled is kept for its variance, not for its meaning.
     const separation = auc(
       classes.positives.map(score),
       classes.negatives.map(score),
     );
-    // Both halves of C1 matter, so the objective is their mean rather than
-    // whichever one happens to be easier to move.
     return { ndcg, auc: separation, objective: (ndcg + separation) / 2 };
   }
 

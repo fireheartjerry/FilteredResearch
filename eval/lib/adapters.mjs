@@ -39,6 +39,13 @@ export function stripTopicEvidence(work) {
     topicName: null,
     subfieldName: null,
     fieldName: null,
+    // The taxonomy ids go too, not just the names. One relevance gain level is
+    // defined as "same subfield as the query's topic", so a ranker holding
+    // subfieldId could cluster on it and propagate relevance between papers that
+    // share a label -- reaching the judgements without ever matching text.
+    subfieldId: null,
+    fieldId: null,
+    domainId: null,
     topics: [],
   };
 }

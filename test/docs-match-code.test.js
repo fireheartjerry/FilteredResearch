@@ -28,4 +28,16 @@ test("the documented novelty weights are the shipped novelty weights", async () 
     doc.includes(`${NOVELTY_WEIGHTS.length} signals`) || doc.includes("Ten signals"),
     "the stated signal count does not match the shipped one",
   );
+
+  // SPEC.md states the same count in prose and drifted independently of the
+  // table, so it is pinned separately rather than assumed to follow.
+  const spec = await readFile(new URL("../SPEC.md", import.meta.url), "utf8");
+  const spelled = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve"];
+  const claimed = spec.match(/Score novelty from (\w+) signals/);
+  assert.ok(claimed, "SPEC.md no longer states how many novelty signals there are");
+  assert.equal(
+    claimed[1],
+    spelled[NOVELTY_WEIGHTS.length],
+    `SPEC.md claims ${claimed[1]} novelty signals; the code fuses ${NOVELTY_WEIGHTS.length}`,
+  );
 });

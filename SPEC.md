@@ -39,7 +39,7 @@ The primary user chooses an OpenAlex field/subfield and an index depth in the si
 
 ### Ranking
 
-- Score novelty from eleven signals over the reference graph, the text and the
+- Score novelty from ten signals over the reference graph, the text and the
   paper's own shape, each ranked inside the paper's field cohort before being
   combined. Only signals the record has evidence for are combined and the weights
   are renormalised over those, so a record without a reference list is scored on
