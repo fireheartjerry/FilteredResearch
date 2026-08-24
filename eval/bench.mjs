@@ -96,7 +96,12 @@ function measureRepeatedly(which) {
   for (let attempt = 0; attempt < REPEATS; attempt += 1) runs.push(measureOnce(which));
   return {
     name: runs[0].name,
-    wallClockMs: Math.round(median(runs.map((run) => run.wallClockMs))),
+    // Minimum for time, median for memory, and the difference is not arbitrary.
+    // Contention can only ever make a run slower, never faster, so the fastest
+    // observation is the closest estimate of the work actually required -- the
+    // standard convention for timing benchmarks. Memory has no such asymmetry, so
+    // its middle observation is the honest one.
+    wallClockMs: Math.round(Math.min(...runs.map((run) => run.wallClockMs))),
     peakRssMb: Math.round(median(runs.map((run) => run.peakRssMb))),
     runs: runs.map((run) => ({ wallClockMs: run.wallClockMs, peakRssMb: run.peakRssMb })),
     scored: runs[0].scored,
@@ -128,7 +133,7 @@ async function main() {
   const memoryRatio = current.peakRssMb / Math.max(1, baseline.peakRssMb);
 
   for (const result of results) {
-    console.log(`${result.name.padEnd(16)} ${String(result.wallClockMs).padStart(7)} ms   peak RSS ${result.peakRssMb} MB   (of ${result.runs.map((r) => r.peakRssMb).join(", ")})`);
+    console.log(`${result.name.padEnd(16)} ${String(result.wallClockMs).padStart(7)} ms   peak RSS ${result.peakRssMb} MB   (times ${result.runs.map((r) => r.wallClockMs).join(", ")} | memory ${result.runs.map((r) => r.peakRssMb).join(", ")})`);
   }
   console.log(`\n  wall-clock ratio vs baseline: ${ratio.toFixed(2)}x`);
   console.log(`  peak memory ratio:            ${memoryRatio.toFixed(2)}x\n`);
@@ -139,7 +144,7 @@ async function main() {
     peers: PEERS,
     isolatedProcesses: true,
     repeats: REPEATS,
-    statistic: "median",
+    statistic: { wallClock: "minimum", memory: "median" },
     heapCapMb: HEAP_CAP_MB,
     results,
     ratio: Number(ratio.toFixed(3)),
