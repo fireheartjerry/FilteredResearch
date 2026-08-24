@@ -81,9 +81,10 @@ const STRUCTURAL_CONSOLIDATION_WEIGHT = 34;
 // Consolidation detected from shape alone -- no keyword list, no document-type
 // field. Logistic coefficients fitted on the tuning split against OpenAlex's own
 // `type: review` flag (eval/experiments/consolidation-fit.mjs), operating on
-// features rank-normalised inside the batch. Held-out separation is AUC 0.727,
-// against 0.738 on the data it was fitted to, so it is genuinely reading the
-// structure of consolidation work rather than memorising this corpus.
+// features rank-normalised inside the batch. Held-out separation is AUC 0.690,
+// against 0.717 on the data it was fitted to, so it is reading the structure of
+// consolidation work rather than memorising this corpus. Regenerate with
+// `node eval/experiments/consolidation-fit.mjs`.
 //
 // The document-type field is deliberately NOT used as an input. It is what the
 // benchmark defines the negative class with, so feeding it back in would make
@@ -282,8 +283,8 @@ function monthOf(date) {
 // Imputing a neutral value for a missing signal would drag every record without
 // references toward the middle and hide the fact that less was known about it;
 // renormalising over what is present keeps the scale honest instead.
-function fuse(measure, perCohort) {
-  const contributions = [];
+function fuse(measure, perCohort, { explain = true } = {}) {
+  const contributions = explain ? [] : null;
   let total = 0;
   let available = 0;
   for (const signal of NOVELTY_WEIGHTS) {
@@ -294,9 +295,9 @@ function fuse(measure, perCohort) {
     const oriented = signal.invert ? 1 - rank : rank;
     total += signal.weight * oriented;
     available += signal.weight;
-    contributions.push({ signal: signal.key, label: signal.label, rank: Number(oriented.toFixed(3)), weight: signal.weight });
+    if (contributions) contributions.push({ signal: signal.key, label: signal.label, rank: Number(oriented.toFixed(3)), weight: signal.weight });
   }
-  return { fusedValue: available > 0 ? total / available : null, contributions, availableWeight: available };
+  return { fusedValue: available > 0 ? total / available : null, contributions: contributions || [], availableWeight: available };
 }
 
 // When a cohort is too small to describe a distribution -- a handful of papers,
@@ -426,7 +427,11 @@ export function scoreBatch(candidates, references, authors, options = {}) {
     shapeDistributions.set(key, perShape);
   }
 
-  const fused = measured.map((item) => ({ ...item, ...fuse(item.measure, distributions.get(item.cohort.key)) }));
+  // Assigned onto the existing entries rather than spread into new ones. The
+  // pipeline previously built three successive ten-thousand-element arrays of
+  // copies -- measured, fused, priced -- each retaining the fields of the last.
+  const fused = measured;
+  for (const item of fused) Object.assign(item, fuse(item.measure, distributions.get(item.cohort.key)));
 
   // The fused scale is anchored the same way: a candidate's percentile is taken
   // against the field's own fused distribution, so a quiet month cannot promote
@@ -437,7 +442,10 @@ export function scoreBatch(candidates, references, authors, options = {}) {
       .filter((item) => item.cohort.key === key && item.fusedValue !== null)
       .map((item) => item.fusedValue);
     const fromPeers = (anchorMeasures.get(key) || [])
-      .map((measure) => fuse(measure, distributions.get(key)).fusedValue)
+      // The per-signal breakdown is only ever read off a candidate, so anchors
+      // skip building one. At a hundred and twenty anchors per cohort cache it is
+      // pure garbage otherwise.
+      .map((measure) => fuse(measure, distributions.get(key), { explain: false }).fusedValue)
       .filter((value) => value !== null);
     fusedByCohort.set(key, [...fromCandidates, ...fromPeers].sort((left, right) => left - right));
   }
@@ -455,7 +463,8 @@ export function scoreBatch(candidates, references, authors, options = {}) {
 
   const fieldNorms = buildFieldAuthorNorms(cleanCandidates, authorMap);
 
-  const priced = fused.map((item) => {
+  const priced = fused;
+  for (const item of priced) {
     const { work, measure, contributions, fusedValue, availableWeight } = item;
     const distribution = fusedByCohort.get(item.cohort.key) || [];
 
@@ -497,9 +506,8 @@ export function scoreBatch(candidates, references, authors, options = {}) {
       1,
     );
     const shrink = 0.35 + 0.65 * confidence;
-    const rawScore = 50 + shrink * (100 * calibrated - 50) - penalty;
-    return { item, measure, contributions, fusedValue, availableWeight, percentile, calibrated, prior, shape, shapeRank, structuralPenalty, lexicalPenalty, penalty, confidence, rawScore };
-  });
+    Object.assign(item, { percentile, calibrated, prior, shape, shapeRank, structuralPenalty, lexicalPenalty, penalty, confidence, rawScore: 50 + shrink * (100 * calibrated - 50) - penalty });
+  }
 
   // The scale is re-anchored after the penalties and the confidence shrink, not
   // before. Applied to an already-calibrated number, those two steps pulled the
@@ -512,14 +520,13 @@ export function scoreBatch(candidates, references, authors, options = {}) {
   for (const key of cohortKeys) {
     rawByCohort.set(
       key,
-      priced.filter((entry) => entry.item.cohort.key === key).map((entry) => entry.rawScore).sort((left, right) => left - right),
+      priced.filter((entry) => entry.cohort.key === key).map((entry) => entry.rawScore).sort((left, right) => left - right),
     );
   }
 
   return priced.map((entry) => {
-    const { item, measure, contributions, fusedValue, availableWeight, percentile, calibrated, prior, shape, shapeRank, structuralPenalty, lexicalPenalty, penalty, confidence, rawScore } = entry;
-    const { work } = item;
-    const cohortRaw = rawByCohort.get(item.cohort.key) || [];
+    const { work, measure, contributions, fusedValue, availableWeight, percentile, calibrated, prior, shape, shapeRank, structuralPenalty, lexicalPenalty, penalty, confidence, rawScore } = entry;
+    const cohortRaw = rawByCohort.get(entry.cohort.key) || [];
     const finalPercentile = cohortRaw.length >= 8 ? rankIn(cohortRaw, rawScore) : null;
     const ceiling = duplicateCeiling(Math.max(measure.nearestSemantic, measure.nearestLexical));
     const spread = finalPercentile === null
@@ -565,7 +572,7 @@ export function scoreBatch(candidates, references, authors, options = {}) {
       nearestSimilarity: measure.nearestSemantic,
       noveltyEvidence: {
         peerCount: measure.peerCount,
-        comparedAgainst: item.cohort.key,
+        comparedAgainst: entry.cohort.key,
         crowding: measure.crowding,
         nearestSemanticSimilarity: measure.nearestSemantic,
         nearestLexicalSimilarity: measure.nearestLexical,

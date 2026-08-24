@@ -206,7 +206,7 @@ empty abstract, title-only, zero peers, one peer, all-identical corpus, a
 12,000-character abstract, malformed dates, missing `topics`, missing
 `authorships`, non-UTF8 escapes, a paper that is its own peer, and a corpus where
 every paper shares one publication date. Requirement: **no throw, no NaN, no
-undefined score, nothing outside 1–100**, and every case emits evidence
+undefined score, nothing outside 0-100**, and every case emits evidence
 explaining its low confidence. 8 pts = clean sweep; 0 pts = any throw or NaN.
 
 ### C7 — Performance and memory · 7 pts
