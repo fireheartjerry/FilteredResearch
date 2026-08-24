@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-24T16:51:16.289Z",
+  "generatedAt": "2026-08-24T17:14:55.771Z",
   "split": "test",
   "corpus": {
     "candidates": 2267,
@@ -58,31 +58,31 @@
   "relevanceRanker": "lexical + bundled sentence model",
   "relevance": {
     "queries": 41,
-    "ndcg_at_20": 0.5928,
-    "ndcg_at_10": 0.5709,
-    "mrr": 0.876,
-    "recall_at_100": 0.7108,
-    "precision_at_10": 0.4659,
+    "ndcg_at_20": 0.6398,
+    "ndcg_at_10": 0.6125,
+    "mrr": 0.8982,
+    "recall_at_100": 0.8953,
+    "precision_at_10": 0.5122,
     "worst_queries": [
       {
         "query": "Advanced Neural Network Applications",
-        "ndcg_at_20": 0.1549
+        "ndcg_at_20": 0.2011
       },
       {
         "query": "Particle physics theoretical and experimental studies",
-        "ndcg_at_20": 0.2104
+        "ndcg_at_20": 0.2868
       },
       {
-        "query": "Spectroscopy and Quantum Chemical Studies",
-        "ndcg_at_20": 0.2161
+        "query": "Educational Innovations and Challenges",
+        "ndcg_at_20": 0.3257
       },
       {
         "query": "Quantum and electron transport phenomena",
-        "ndcg_at_20": 0.2172
+        "ndcg_at_20": 0.3859
       },
       {
-        "query": "Conducting polymers and applications",
-        "ndcg_at_20": 0.2849
+        "query": "2D Materials and Applications",
+        "ndcg_at_20": 0.4331
       }
     ]
   },
@@ -93,15 +93,15 @@
       "answerable": true,
       "top": [
         "Density functional theory calculations for cathode materials of proton-conducting solid oxide fuel cells: A mi",
+        "Electromagnetism (20152 Phys110 Week1 Day1 Hour1)",
+        "Ethylene-Tetrafluoroethylene: A Review",
         "Native point defects and their implications for the Dirac point gap at MnBi$_2$Te$_4$(0001)",
         "Benchmarking Density Functional Approximations for Diamagnetic and Paramagnetic Molecules in Nonuniform Magnet",
+        "Your New IEEE Spectrum Website: An Enhanced Member Experience is Central to the New Spectrum Website",
+        "Animated Learning",
+        "A Hidden Variable Model of Hydrogen Energy Spectra",
         "Inelastic Neutron Scattering Study of Magnetic Exchange Pathways in MnS",
-        "Atomistic electronic structure in the single-chain limit of organic conductors",
-        "Comprehensive Study of Lithium Adsorption and Diffusion on Janus Mo/WXY (X, Y = S, Se, Te) Using First-Princip",
-        "Density functional theory investigation on lattice dynamics, elastic properties and origin of vanished magneti",
-        "Ultranarrow TaS2 Nanoribbons",
-        "Islands and Page curves in 4d from Type IIB",
-        "Lanthanide Ions Sensitization by Small Noble Metal Nanoclusters"
+        "Atomistic electronic structure in the single-chain limit of organic conductors"
       ]
     },
     {
@@ -109,16 +109,16 @@
       "corpusMatches": 17,
       "answerable": true,
       "top": [
-        "Density functional theory calculations for cathode materials of proton-conducting solid oxide fuel cells: A mi",
         "Benchmarking Density Functional Approximations for Diamagnetic and Paramagnetic Molecules in Nonuniform Magnet",
         "Noether’s theorem in statistical mechanics",
+        "Density functional theory calculations for cathode materials of proton-conducting solid oxide fuel cells: A mi",
         "Atomistic electronic structure in the single-chain limit of organic conductors",
-        "Density functional theory investigation on lattice dynamics, elastic properties and origin of vanished magneti",
-        "Data from \"Solving the Hubbard model using density matrix embedding theory and the variational quantum eigenso",
-        "Inelastic Neutron Scattering Study of Magnetic Exchange Pathways in MnS",
-        "Comprehensive Study of Lithium Adsorption and Diffusion on Janus Mo/WXY (X, Y = S, Se, Te) Using First-Princip",
         "Equivariant Manifold Flows",
-        "Interactions between Sterically Stabilized Nanoparticles: The Effects of Brush Bidispersity and Chain Stiffnes"
+        "Data from \"Solving the Hubbard model using density matrix embedding theory and the variational quantum eigenso",
+        "Steady-state properties of quantum non-Hermitian lattice models",
+        "A Hidden Variable Model of Hydrogen Energy Spectra",
+        "Initial Stages 2021",
+        "Comprehensive Study of Lithium Adsorption and Diffusion on Janus Mo/WXY (X, Y = S, Se, Te) Using First-Princip"
       ]
     },
     {
@@ -129,13 +129,13 @@
         "Incidental Brain MRI Findings in Children: A Systematic Review and Meta-Analysis",
         "Trimodality PET/CT/MRI and Radiotherapy: A Mini-Review",
         "Radiation Oncology Exhibits",
-        "Imaging andrology of the future: Where functional imaging embraces the clinic",
         "Ischemic hypoxic encephalopathy: The role of MRI of neonatal injury and medico-legal implication",
-        "STUDY OF NUCLEAR MAGNETIC RESONANCE SPECTROSCOPY WITH APPLICATIONS: A COMPREHENSIVE REVIEW",
+        "Imaging andrology of the future: Where functional imaging embraces the clinic",
         "Frequency of Anatomical Variations and Congenital Anomalies in Pancreatobiliary Tract through Magnetic Resonan",
+        "Denoising of MR and CT images using cascaded multi-supervision convolutional neural networks with progressive ",
+        "STUDY OF NUCLEAR MAGNETIC RESONANCE SPECTROSCOPY WITH APPLICATIONS: A COMPREHENSIVE REVIEW",
         "Comparison of phosphonate, hydroxypropyl and carboxylate pendants in Fe(III) macrocyclic complexes as MRI cont",
-        "Laser-detected magnetic resonance induced by radio-frequency two-photon processes",
-        "Is hyperpolarised gas magnetic resonance imaging a valid and reliable tool to detect lung health in cystic fib"
+        "Deep Learning for Ultrasound Beamforming"
       ]
     },
     {
@@ -147,11 +147,11 @@
         "COVID-19 in Children with Cancer and Continuation of Cancer-Directed Therapy During the Infection",
         "Vaccination history for diphtheria and tetanus is associated with less severe COVID-19",
         "The Alteration of Clinical and Laboratory Signs and Symptoms of COVID-19 in Re-infection: A Case Report",
+        "Digital PCR to quantify ChAdOx1 nCoV-19 copies in blood and tissues",
         "Predictive Analytics of COVID-19 Pandemic: Statistical Modelling Perspective",
         "COVID-19 Isolation and Contact Tracing with Country Samples: A Systematic Review",
         "Computed tomography findings in 3,557 COVID-19 infected children: a systematic review",
         "Factors associated with poor outcomes in pneumonia patients during the COVID-19 pandemics",
-        "Digital PCR to quantify ChAdOx1 nCoV-19 copies in blood and tissues",
         "Anchoring on COVID-19: A Case Report of Human Granulocytic Anaplasmosis Masquerading as COVID-19"
       ]
     },
@@ -160,16 +160,16 @@
       "corpusMatches": 3,
       "answerable": false,
       "top": [
-        "InSbAs Two-Dimensional Electron Gases as a Platform for Topological Superconductivity",
+        "Effect of Antiferromagnetic Order on Mixed States in Electron-Doped High-Tc Superconductors",
         "Constructing synthetic materials with superconducting quantum circuits",
-        "Theory of unconventional superconductivity in nickelate-based materials*",
-        "Competition between charge-density-wave and superconductivity in the kagome metal RbV3Sb5",
+        "InSbAs Two-Dimensional Electron Gases as a Platform for Topological Superconductivity",
         "Revisiting the properties of the heavy-fermion superconductor UBe 13 via polycrystalline samples",
+        "Theory of unconventional superconductivity in nickelate-based materials*",
         "Robustness of vortex-bound Majorana zero modes against correlated disorder",
+        "Competition between charge-density-wave and superconductivity in the kagome metal RbV3Sb5",
         "Crossover between short- and long-range proximity effects in superconductor/ferromagnet/superconductor junctio",
         "Giant demagnetization effects induced by superconducting films",
-        "Dodecanacci superconductor–semiconductor dispersive photonic quasicrystal one dimensional",
-        "Suppression of Pseudogap Behavior and Antiferromagnetic Fluctuations by Electron Doping in T′-La1.8Eu0.2CuO4−y"
+        "Dodecanacci superconductor–semiconductor dispersive photonic quasicrystal one dimensional"
       ]
     },
     {
@@ -180,17 +180,17 @@
         "Analysis of multi-layer thin-film materials using benchtop XRD and XRF systems",
         "Deposition of Nb-Si-C Thin Films by Radio Frequency Magnetron Sputtering",
         "Optical and Morphological Properties of Electropolymerized Semiconductor Polyaniline Thin Films: Effect of Thi",
-        "Enhanced Free Surface Mobility Facilitates Release of Free-volume Holes in Thin-film Polymer Glasses",
         "Boundary-Scattering Induced Seebeck Coefficient Enhancement in Thin Films within Relaxation Time Approximation",
         "In situ X-ray photoelectron spectroscopy study: effect of inert Ar sputter etching on the core-level spectra o",
-        "Influence of the magnetic field on the structural characteristics of granular Co Ag100- thin film alloys",
-        "Epitaxial growth technique for single-crystalline PbTiO 3 thin film on Si substrate using an HfO 2 buffer laye",
+        "Polystyrene Molecular Weight Determination of Submicron Particles Shell",
+        "Enhanced Free Surface Mobility Facilitates Release of Free-volume Holes in Thin-film Polymer Glasses",
         "Invisible Spherical Objects Made of Isotropic Materials",
-        "Influence of Fluorine-Containing Monomer Content on the Hydrophobic and Transparent Properties of Nanohybrid S"
+        "Oriented surface nucleation in diopside glass",
+        "Medical application of Diamond Like Carbon (DLC) coating: A review"
       ]
     }
   ],
-  "scoringMs": 10978,
+  "scoringMs": 9168,
   "baseline": {
     "novelty": {
       "evaluated": 626,
@@ -366,7 +366,7 @@
         ]
       }
     ],
-    "scoringMs": 3896
+    "scoringMs": 2815
   },
   "llmBaseline": {
     "papers": 300,
@@ -394,7 +394,7 @@
   "deltas": {
     "novelty_ndcg_at_50": 0.0752,
     "novelty_auc": 0.0996,
-    "relevance_ndcg_at_20": 0.5675,
+    "relevance_ndcg_at_20": 0.6145,
     "combined_ndcg_at_50": -0.2619
   }
 }

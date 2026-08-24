@@ -18,11 +18,18 @@ import { nearestTerms } from "./semantic.js";
 import { embedWorks, embedQuery, cosine } from "./embedding.js";
 
 // How much of the ordering the embedding decides when one is available. Swept on
-// the tuning split: lexical alone scores nDCG@20 0.433, embeddings alone 0.638,
-// and the blend is flat between them, so this leans on the model while keeping
-// the exact-match evidence that catches an acronym or a rare technical term the
-// model has never seen.
-const EMBEDDING_SHARE = 0.8;
+// the tuning split, where lexical alone scores nDCG@20 0.433 and the model alone
+// 0.638, with the blend rising monotonically between them. The model therefore
+// decides the order outright and the lexical score survives only as the
+// tie-break, which is what still catches an acronym or a rare technical term the
+// encoder has never seen.
+//
+// Variants that were measured and are not used: encoding title and abstract
+// separately and taking the better match (0.640 against 0.639, three times the
+// inference), and three retrieval-specific encoders of the same size, all of
+// which lost to this general-purpose one -- bge-small 0.606, gte-small 0.616,
+// e5-small 0.527.
+const EMBEDDING_SHARE = 1;
 
 // Retrieval parameters, swept on the tuning split
 // (eval/experiments/relevance-sweep.mjs).

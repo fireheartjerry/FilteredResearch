@@ -170,8 +170,13 @@ Embedding a paper costs about 28 ms, so vectors are cached by work id: a paper i
 embedded once, the first time it is ranked, and reused afterwards. An install with
 no interest phrases never loads the model at all.
 
-Measured on held-out topic judgements, nDCG@20 goes from **0.03 to 0.59**, MRR from
-0.04 to 0.88, recall@100 from 0.06 to 0.71. Without the model present the ranker
+Three retrieval-specific encoders of the same size were measured against this
+general-purpose one and all lost: bge-small 0.606, gte-small 0.616, e5-small
+0.527, against 0.638. Encoding title and abstract separately and taking the better
+match gains 0.002 for three times the inference, and is not used.
+
+Measured on held-out topic judgements, nDCG@20 goes from **0.03 to 0.64**, MRR from
+0.04 to 0.90, recall@100 from 0.06 to 0.90. Without the model present the ranker
 degrades to lexical order and scores 0.43, which is still seventeen times the
 0.025 it replaced.
 

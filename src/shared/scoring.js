@@ -52,6 +52,13 @@ export const NOVELTY_WEIGHTS = Object.freeze([
   { key: "topicConcentration", weight: 0.009, invert: false, label: "focused on one topic" },
 ]);
 
+// A logistic combination of the same ranks was fitted on the tuning split and
+// measured: on its own it separates better than this weighted average (held-out
+// AUC 0.691 against 0.654), but once the consolidation penalty, the confidence
+// shrink and the final re-rank are applied on top, the advantage shrinks to
+// +0.011 AUC while costing 0.024 nDCG and 0.009 Spearman. The simpler form keeps
+// the better margins on both anchors, so it stands.
+
 // Reference popularity -- how heavily cited a paper's sources are, on average and
 // at their peak -- is computed and reported as evidence but not fused. Measured
 // alone on the tuning split the mean has the strongest rank correlation with
@@ -341,6 +348,8 @@ function fuse(measure, perCohort, { explain = true } = {}) {
   }
   return { fusedValue: available > 0 ? total / available : null, contributions: contributions || [], availableWeight: available };
 }
+
+
 
 // When a cohort is too small to describe a distribution -- a handful of papers,
 // or a field with almost no history -- there is nothing to rank against, so the
