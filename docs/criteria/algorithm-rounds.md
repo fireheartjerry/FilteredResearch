@@ -188,6 +188,35 @@ and reported as evidence; neither is fused.
 
 ---
 
+## Round 9 — the bundled-model question, settled
+
+The constraints permit shipping a model inside the extension, which is not the
+same as calling a hosted one, and the first reading of them missed that. Measured
+rather than argued, with a 22 MB quantized MiniLM on the same held-out queries:
+
+| | nDCG@20 |
+|---|---|
+| Lexical, as shipped | 0.433 |
+| Hybrid | 0.565 |
+| Embeddings alone | **0.638** |
+
+So the relevance points are real and reachable inside the stated constraints. Two
+things stop it happening in this branch, and both are worth knowing:
+
+**It buys relevance only.** Pointed at novelty, crowding in that same space
+separates disruptive from derivative research at **AUC 0.501** — chance, and no
+better than the corpus-local space it would replace. Text distance carries no
+disruption signal however good the embedding is, which is exactly what the shipped
+weights already encode by giving `crowding` zero weight.
+
+**It costs a different product.** 27.7 ms per document makes a 10,000-paper pass
+277 s against a baseline of 11 s, and the package goes from 0.37 MB to roughly
+28 MB. There is a design that works — embed once at index time, persist, reuse,
+which puts a feed window at 6.9 s — but that is an architecture change, and it is
+a product call rather than a scoring one.
+
+---
+
 ## Where it stops, and why
 
 Two criteria were amended mid-loop, both because they set absolute thresholds

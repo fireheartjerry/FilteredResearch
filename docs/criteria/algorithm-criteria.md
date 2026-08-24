@@ -180,6 +180,15 @@ a scoring one:
   tokenizer and the WASM runtime are included -- a 75x increase to a product whose
   pitch is that it is small, local and instant.
 
+**And it buys relevance only.** The same model was pointed at novelty
+(`eval/experiments/embedding-novelty.mjs`): crowding measured in a real semantic
+space separates disruptive from derivative research at **AUC 0.501** — chance,
+and indistinguishable from the corpus-local space it would replace. Text distance
+carries no disruption signal regardless of how good the embedding behind it is,
+which is the same conclusion the shipped weights already encode by giving
+`crowding` a weight of zero. A bundled model is a relevance decision, not a
+novelty one.
+
 The criterion is therefore left unmet and un-amended, with the route to meeting it
 measured and written down rather than asserted.
 
